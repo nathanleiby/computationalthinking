@@ -997,14 +997,16 @@ k2d_total ≈ 1
 
 # ╔═╡ aad67fd0-ee15-11ea-00d4-274ec3cda3a3
 function with_gaussian_blur(image)
-	kernel_size = 5
+	kernel_size = 11
 	
-	# return convolve_image(image, gaussian_kernel_2D(kernel_size))
-	return image
+	return convolve_image(image, gaussian_kernel_2D(kernel_size))
 end
 
 # ╔═╡ 8ae59674-ee18-11ea-3815-f50713d0fa08
 md"_Let's make it interactive. 💫_"
+
+# ╔═╡ 1ef104ce-4e4b-11eb-1ed4-634e87124c45
+with_gaussian_blur(philip)
 
 # ╔═╡ 7c6642a6-ee15-11ea-0526-a1aac4286cdd
 md"""
@@ -1049,11 +1051,35 @@ $$G_\text{total} = \sqrt{G_x^2 + G_y^2}.$$
 For simplicity you can choose one of the "channels" (colours) in the image to apply this to.
 """
 
+# ╔═╡ 29467796-4e4c-11eb-0d32-4730f5de1b45
+sobel_kernel_x = [
+	1 0 -1
+	2 0 -2
+	1 0 -1
+]
+
+# ╔═╡ 22b6ed98-4e4c-11eb-08aa-0de469c1d36a
+sobel_kernel_y = [
+	1 2 1
+    0 0 0
+	-1 -2 -1
+]
+
 # ╔═╡ 9eeb876c-ee15-11ea-1794-d3ea79f47b75
 function with_sobel_edge_detect(image)
+	# TODO: Figure out how to make convolve_image not RGB dependent, 
+	# so I don't have to force back to Gray here
+	Gx = convolve_image(image, sobel_kernel_x)
+	Gy = convolve_image(image, sobel_kernel_y)
+	Gx2 = map(n -> n^2, Gray.(Gx))
+	Gy2 = map(n-> n^2, Gray.(Gy))
+	Gtotal = map(sqrt, Gx2 + Gy2)
 	
-	return convolve_image(image, gaussian_kernel_2D(3))
+	return Gray.(Gtotal)
 end
+
+# ╔═╡ 57ff193a-4e4c-11eb-0c11-2d1e909fafe7
+with_sobel_edge_detect(Gray.(philip))
 
 # ╔═╡ 1b85ee76-ee10-11ea-36d7-978340ef61e6
 md"""
@@ -1818,13 +1844,17 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╠═aad67fd0-ee15-11ea-00d4-274ec3cda3a3
 # ╟─8ae59674-ee18-11ea-3815-f50713d0fa08
 # ╠═94c0798e-ee18-11ea-3212-1533753eabb6
-# ╠═a75701c4-ee18-11ea-2863-d3042e71a68b
 # ╠═f461f5f2-ee18-11ea-3d03-95f57f9bf09e
+# ╠═1ef104ce-4e4b-11eb-1ed4-634e87124c45
+# ╠═a75701c4-ee18-11ea-2863-d3042e71a68b
 # ╟─7c6642a6-ee15-11ea-0526-a1aac4286cdd
+# ╟─29467796-4e4c-11eb-0d32-4730f5de1b45
+# ╟─22b6ed98-4e4c-11eb-08aa-0de469c1d36a
 # ╠═9eeb876c-ee15-11ea-1794-d3ea79f47b75
 # ╟─1a0324de-ee19-11ea-1d4d-db37f4136ad3
 # ╠═1bf94c00-ee19-11ea-0e3c-e12bc68d8e28
 # ╠═1ff6b5cc-ee19-11ea-2ca8-7f00c204f587
+# ╠═57ff193a-4e4c-11eb-0c11-2d1e909fafe7
 # ╟─0001f782-ee0e-11ea-1fb4-2b5ef3d241e2
 # ╠═1b85ee76-ee10-11ea-36d7-978340ef61e6
 # ╠═477d0a3c-ee10-11ea-11cf-07b0e0ce6818
@@ -1839,5 +1869,5 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╟─5aa9dfb2-edee-11ea-3754-c368fb40637c
 # ╠═74d44e22-edee-11ea-09a0-69aa0aba3281
 # ╟─115ded8c-ee0a-11ea-3493-89487315feb7
-# ╠═dfb7c6be-ee0d-11ea-194e-9758857f7b20
+# ╟─dfb7c6be-ee0d-11ea-194e-9758857f7b20
 # ╠═e15ad330-ee0d-11ea-25b6-1b1b3f3d7888
