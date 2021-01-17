@@ -716,7 +716,7 @@ Now it's easy to see that the above algorithm is equivalent to one that populate
 function least_energy_matrix(energies)
 	out = copy(energies)
 	m, n = size(out)
-	for row in reverse(1:m-1)
+	for row in Iterators.reverse(1:m-1)
 		for col in 1:n
 			# get values of 2 or 3 children positions
 			cols = unique([clamp(col-1,1,n), col, clamp(col+1,1,n)])
@@ -741,10 +741,10 @@ function seam_from_precomputed_least_energy(energies, starting_pixel::Int)
 	least_energies = least_energy_matrix(energies)
 	m, n = size(least_energies)
 
-	seam = []
+	seam = zeros(Int, m)
 	col = starting_pixel
 	for row in 1:m
-		push!(seam, col)
+		seam[row] = col
 		if row == m
 			break
 		end
@@ -823,9 +823,9 @@ end
 if shrink_dict
 	# TODO: @n - was this supposed to work with default of n = 200 on the large picture?
 	# for me, n=100 on img_small (ratio=1/3) takes ~15s
-	n = 20
-	dict_carved = shrink_n(img_small, n, recursive_memoized_seam)
-	md"Shrink by: $(@bind dict_n Slider(1:n, show_value=true))"
+	dict_carved_n = 20
+	dict_carved = shrink_n(img_small, dict_carved_n, recursive_memoized_seam)
+	md"Shrink by: $(@bind dict_n Slider(1:dict_carved_n, show_value=true))"
 end
 
 # ╔═╡ 6e73b1da-f3c5-11ea-145f-6383effe8a89
@@ -847,9 +847,12 @@ end
 
 # ╔═╡ 51e28596-f3c5-11ea-2237-2b72bbfaa001
 if shrink_bottomup
+	# N = number of seam carves to pre-compute
+	# img_size = effort per seam carving
+	bottomup_carved_n = 3
 	# bottomup_carved = shrink_n(img, 200, seam_from_precomputed_least_energy)
-	bottomup_carved = shrink_n(img_small, n, seam_from_precomputed_least_energy)
-	md"Shrink by: $(@bind bottomup_n Slider(1:n, show_value=true))"
+	bottomup_carved = shrink_n(img_small, bottomup_carved_n, seam_from_precomputed_least_energy)
+	md"Shrink by: $(@bind bottomup_n Slider(1:bottomup_carved_n, show_value=true))"
 end
 
 # ╔═╡ 0a10acd8-f3c6-11ea-3e2f-7530a0af8c7f
