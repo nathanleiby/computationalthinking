@@ -15,6 +15,8 @@ end
 
 # ╔═╡ 15a4ba3e-f0d1-11ea-2ef1-5ff1dee8795f
 using Pkg
+# hello
+# what
 
 # ╔═╡ 21e744b8-f0d1-11ea-2e09-7ffbcdf43c37
 begin
@@ -104,12 +106,19 @@ brightness(c) = 0.3 * c.r + 0.59 * c.g + 0.11 * c.b
 
 # ╔═╡ 236dab08-f13d-11ea-1922-a3b82cfc7f51
 begin
-	url = "http://files.softicons.com/download/game-icons/super-mario-icons-by-sandro-pereira/png/32/Retro%20Mario.png"
+	url = "https://files.softicons.com/download/game-icons/super-mario-icons-by-sandro-pereira/png/32/Retro%20Mario.png"
 	img = Dict(
 		"disc" => disc(25),
-		"mario" => load(download(url))
+		# "mario" => load("./mario.png"),
+		"mario" => load(download(url)),
 	)[img_select]
 end
+
+# ╔═╡ abe783f0-52f4-11eb-2745-bb80d90936b2
+
+
+# ╔═╡ b5886862-52f3-11eb-399d-5fca4947d3ca
+
 
 # ╔═╡ 03434682-f13b-11ea-2b6e-11ad781e9a51
 md"""Show $G_x$ $(@bind Gx CheckBox())
@@ -243,15 +252,17 @@ end
 # ╠═fe3559e0-f13b-11ea-06c8-a314e44c20d6
 # ╠═b7ea8a28-f0d7-11ea-3e98-7b19a1f58304
 # ╠═0ccf76e4-f0d9-11ea-07c9-0159e3d4d733
-# ╟─236dab08-f13d-11ea-1922-a3b82cfc7f51
+# ╠═236dab08-f13d-11ea-1922-a3b82cfc7f51
+# ╠═abe783f0-52f4-11eb-2745-bb80d90936b2
+# ╠═b5886862-52f3-11eb-399d-5fca4947d3ca
 # ╟─03434682-f13b-11ea-2b6e-11ad781e9a51
 # ╟─ca13597a-f168-11ea-1a2c-ff7b98b7b2c7
-# ╟─f22aa34e-f0df-11ea-3053-3dcdc070ec2f
+# ╠═f22aa34e-f0df-11ea-3053-3dcdc070ec2f
 # ╠═9232dcc8-f188-11ea-08fe-b787ea93c598
 # ╠═7864bd00-f146-11ea-0020-7fccb3913d8b
 # ╠═b369584c-f183-11ea-260a-35dc797e63ad
 # ╠═b2cbe058-f183-11ea-39dc-23d4a5b92796
-# ╟─9d9cccb2-f118-11ea-1638-c76682e636b2
-# ╟─c821b906-f0d8-11ea-2df0-8f2d06964aa2
-# ╟─6da3fdfe-f0dd-11ea-2407-7b85217b35cc
+# ╠═9d9cccb2-f118-11ea-1638-c76682e636b2
+# ╠═c821b906-f0d8-11ea-2df0-8f2d06964aa2
+# ╠═6da3fdfe-f0dd-11ea-2407-7b85217b35cc
 # ╠═885ec336-f146-11ea-00c4-c1d1ab4c0001
