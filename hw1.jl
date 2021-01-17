@@ -46,6 +46,36 @@ md"""
 Submission by: **_$(student.name)_** ($(student.kerberos_id)@mit.edu)
 """
 
+# ╔═╡ fe23562e-4fbd-11eb-0bfe-8fe5e34bbabc
+
+
+# ╔═╡ 98278714-4fbd-11eb-1b31-6130dc46b517
+some_arr = [4, 3, 2, 1]
+
+# ╔═╡ ff5cca3c-4fbd-11eb-0897-975611114aa7
+some_arr
+
+# ╔═╡ 15037f20-4fbe-11eb-3646-efa8b3cf1351
+reverse!(some_arr)
+
+# ╔═╡ a35eeb9c-4fbd-11eb-25cf-71bfe7222688
+sort!(some_arr)
+
+# ╔═╡ f9ca1fae-4fbd-11eb-3ad7-ed032338777c
+some_arr
+
+# ╔═╡ 3c0023be-4fbe-11eb-15d8-2f4f2f6a0498
+var_a = [1]
+
+# ╔═╡ 419dd67c-4fbe-11eb-1df6-e35e0264c52d
+var_b = [2]
+
+# ╔═╡ 43def740-4fbe-11eb-2c45-ad831acffec5
+var_c = [var_a var_b]
+
+# ╔═╡ 49a96fca-4fbe-11eb-20f7-4bfedefde8af
+push!(var_a, 3)
+
 # ╔═╡ 5f95e01a-ee0a-11ea-030c-9dba276aba92
 md"_Let's create a package environment:_"
 
@@ -702,11 +732,16 @@ begin
 		for i in 1:n
 			push!(items, g(i))
 		end
+		# center = [ .5 ]
+		# [.4, .2, .1, ...]
 		
 		before_normalized = [reverse(items)..., center, items...]
 		
+		# magnitude = sum(before_normalized) # TODO: which sum 
 		magnitude = reduce(+, before_normalized)
 		normalized = map(i -> i/magnitude, before_normalized)
+		# julia-on-ic => julian
+		# normalized = normalize ./ magnitude
 		return normalized
 	end
 end
@@ -715,13 +750,16 @@ end
 md"Let's test your kernel function!"
 
 # ╔═╡ 2a9dd06a-ee13-11ea-3f84-67bb309c77a8
-@bind gaussian_kernel_size_1D Slider(1:1:11, default = 3, show_value=true)
+@bind gaussian_kernel_size_1D Slider(0:1:11, default = 3, show_value=true)
 
 # ╔═╡ b8e34c58-4e1a-11eb-1d41-c38bb666ebe1
 md"""The kernel should be normalized, i.e. the magnitude should be 1:"""
 
 # ╔═╡ 9677af88-4e2c-11eb-1f88-212d682e0705
 gaussian_kernel(gaussian_kernel_size_1D)
+
+# ╔═╡ cc7bf006-4fc5-11eb-226f-2d2ea671b508
+Kernel.gaussian(.9)
 
 # ╔═╡ 99417640-4e1a-11eb-2f41-9db613747856
 reduce(+, gaussian_kernel(gaussian_kernel_size_1D))
@@ -730,6 +768,9 @@ reduce(+, gaussian_kernel(gaussian_kernel_size_1D))
 md"""
 This is the vector before applying a kernel:
 """
+
+# ╔═╡ f138b8be-4e19-11eb-034a-b3bdbf34dc76
+colored_line(random_vect)
 
 # ╔═╡ 015cb506-4e1a-11eb-3476-61fae6782160
 md"""
@@ -748,9 +789,6 @@ test_gauss_1D_a = let
 		convolve_vector(v, k)
 	end
 end
-
-# ╔═╡ f138b8be-4e19-11eb-034a-b3bdbf34dc76
-colored_line(test_gauss_1D_a)
 
 # ╔═╡ b424e2aa-ee14-11ea-33fa-35491e0b9c9d
 colored_line(test_gauss_1D_a)
@@ -854,11 +892,12 @@ RGB(1,0,0) * 0.6
 # ╔═╡ 8b96e0bc-ee15-11ea-11cd-cfecea7075a0
 begin
 	# TODO: represent the kernal as an OffsetArray, so that 0,0 is the mid
-	function apply_kernel(M, K, r, c)
+	function apply_kernel(M, K, r::Int, c::Int)
 		k_rows, k_cols = size(K)
 		if k_rows != k_cols
 			throw("not a square kernel")
 		end
+		
 		l = Int(floor(k_rows / 2))
 		k_mid = Int(l) + 1
 		total = RGB()
@@ -867,7 +906,6 @@ begin
 					m_val = extend_mat(M, r+r_offset, c+c_offset)
 					k_val = extend_mat(K, k_mid+r_offset, k_mid+c_offset)
 					total += (m_val * k_val)
-					# total = extend_mat(M, r, c) * 1
 				end 
 		end
 		
@@ -878,6 +916,7 @@ begin
 	function convolve_image(M::AbstractMatrix, K::AbstractMatrix)
 		num_rows, num_cols = size(M)
 		out = zeros(RGB, num_rows, num_cols)
+		
 		for r in 1:num_rows
 			for c in 1:num_cols
 				out[r, c] = apply_kernel(M, K, r, c)
@@ -957,13 +996,20 @@ Here, the 2D Gaussian kernel will be defined as
 $$G(x,y)=\frac{1}{2\pi \sigma^2}e^{\frac{-(x^2+y^2)}{2\sigma^2}}$$
 """
 
+# ╔═╡ 2766805c-4fc5-11eb-1ca7-c93b46034e41
+30 ÷ 4
+
 # ╔═╡ aa5f463a-4e2b-11eb-2b64-55a4de29cea2
 begin
-	g(x,y) = exp(-(x^2 + y^2) / 2) / (2 * pi)
+	g(x,y) = exp(-(x^2 + y^2) / 2) / (2 * π)
 
 	function gaussian_kernel_2D(n)
-
-		l = Int(floor(n/2))
+		if ! isodd(n)
+			throw("kernel 2d must have odd value of n")
+		end
+		
+		# 3x3
+		l = n ÷ 2
 		out = OffsetArray(zeros(n, n), -l:l, -l:l)
 		# TODO: is there a simpler way to write this? i.e. compute `map` but by row,col indexes instead of value
 		for i in -l:l
@@ -1658,6 +1704,16 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╟─8ef13896-ed68-11ea-160b-3550eeabbd7d
 # ╟─ac8ff080-ed61-11ea-3650-d9df06123e1f
 # ╠═911ccbce-ed68-11ea-3606-0384e7580d7c
+# ╠═fe23562e-4fbd-11eb-0bfe-8fe5e34bbabc
+# ╠═98278714-4fbd-11eb-1b31-6130dc46b517
+# ╠═ff5cca3c-4fbd-11eb-0897-975611114aa7
+# ╠═15037f20-4fbe-11eb-3646-efa8b3cf1351
+# ╠═a35eeb9c-4fbd-11eb-25cf-71bfe7222688
+# ╠═f9ca1fae-4fbd-11eb-3ad7-ed032338777c
+# ╠═3c0023be-4fbe-11eb-15d8-2f4f2f6a0498
+# ╠═419dd67c-4fbe-11eb-1df6-e35e0264c52d
+# ╠═43def740-4fbe-11eb-2c45-ad831acffec5
+# ╠═49a96fca-4fbe-11eb-20f7-4bfedefde8af
 # ╟─5f95e01a-ee0a-11ea-030c-9dba276aba92
 # ╠═65780f00-ed6b-11ea-1ecf-8b35523a7ac0
 # ╟─67461396-ee0a-11ea-3679-f31d46baa9b4
@@ -1792,6 +1848,7 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╠═2a9dd06a-ee13-11ea-3f84-67bb309c77a8
 # ╟─b8e34c58-4e1a-11eb-1d41-c38bb666ebe1
 # ╠═9677af88-4e2c-11eb-1f88-212d682e0705
+# ╠═cc7bf006-4fc5-11eb-226f-2d2ea671b508
 # ╠═99417640-4e1a-11eb-2f41-9db613747856
 # ╟─f79fcbb8-4e19-11eb-0b13-35ddbc3da9e1
 # ╠═f138b8be-4e19-11eb-034a-b3bdbf34dc76
@@ -1836,10 +1893,11 @@ with_sobel_edge_detect(sobel_camera_image)
 # ╟─8a335044-ee19-11ea-0255-b9391246d231
 # ╠═16599744-4e29-11eb-1bf8-c3a3ad9ec54f
 # ╠═7c50ea80-ee15-11ea-328f-6b4e4ff20b7e
+# ╠═2766805c-4fc5-11eb-1ca7-c93b46034e41
 # ╠═aa5f463a-4e2b-11eb-2b64-55a4de29cea2
 # ╠═ae0178d0-4e2b-11eb-37f7-dfb9b0a87e82
 # ╠═dbcbc14e-4e2b-11eb-28d2-51fc6a25f129
-# ╟─1b973fba-4e2c-11eb-14d7-09e9bba708e0
+# ╠═1b973fba-4e2c-11eb-14d7-09e9bba708e0
 # ╠═12648704-4e2c-11eb-2a30-815be658ce14
 # ╠═aad67fd0-ee15-11ea-00d4-274ec3cda3a3
 # ╟─8ae59674-ee18-11ea-3815-f50713d0fa08
