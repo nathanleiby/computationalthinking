@@ -3,6 +3,7 @@
 - Discuss idea of a "reflected Kernel" (see `convolve` fn in HW2). Why reflected?
   - also, discuss why the function name is `filter`.. the function commit actually has a nice explainer under "Details"!
   - @n to learn more about fourier transforms.. will this class cover or can we find/make a Pluto notebook to learn more?
+- My environment seems to be quite slow when running `shrink_n(img, 200, ...)` ... previously I thought it was my Seam Carving implementation, but now I'm wondering if something else might be going on, as even the `seam_from_precomputed_least_energy` efficient implementation is failing (perhaps I have a bug in my efficient implementation)
 
 # TODO
 

@@ -29,7 +29,8 @@ begin
 			"TestImages",
 			"Statistics",
 			"PlutoUI",
-			"BenchmarkTools"
+			"BenchmarkTools",
+			"ImageTransformations"
 			])
 
 	using Images
@@ -38,10 +39,14 @@ begin
 	using Statistics
 	using PlutoUI
 	using BenchmarkTools
+	using ImageTransformations
 end
 
 # ╔═╡ e6b6760a-f37f-11ea-3ae1-65443ef5a81a
 md"_homework 2, version 2.1_"
+
+# ╔═╡ bdd26854-554d-11eb-0648-057c81666744
+
 
 # ╔═╡ 85cfbd10-f384-11ea-31dc-b5693630a4c5
 md"""
@@ -103,15 +108,23 @@ Read it and convince yourself that it is correct.
 
 # ╔═╡ e799be82-f317-11ea-3ae4-6d13ece3fe10
 function remove_in_each_row(img, column_numbers)
+	# passing 1 as the second arg to size means that we get the size along just dimension 1. Dimension 1 here is the rows of the image.
 	@assert size(img, 1) == length(column_numbers) # same as the number of rows
 	m, n = size(img)
 	local img′ = similar(img, m, n-1) # create a similar image with one less column
 
 	# The prime (′) in the variable name is written as \prime<TAB>
     # You cannot use apostrophe for this! (Apostrophe means the transpose of a matrix)
-
+	
+	# (i, j) can be thought of as (row, column)
 	for (i, j) in enumerate(column_numbers)
 		img′[i, :] = vcat(img[i, 1:j-1], img[i, j+1:end])
+		
+		# TODO: are these equivalent? (broadcast and non-broadcast)
+		# 		Here, = was used, but below .= is used.
+		#
+		# img′[i, :] = vcat(img[i, 1:j-1], img[i, j+1:end])
+		# img′[i, :] .= vcat(img[i, 1:j-1], img[i, j+1:end])
 	end
 	img′
 end
@@ -159,7 +172,9 @@ function remove_in_each_row_no_vcat(img, column_numbers)
 	for (i, j) in enumerate(column_numbers)
 		# EDIT THE FOLLOWING LINE and split it into two lines
 		# to avoid using `vcat`.
-		img′[i, :] .= vcat(img[i, 1:j-1], img[i, j+1:end])
+		img′[i, 1:j-1] .= img[i, 1:j-1]
+		img′[i, j:n-1] .= img[i, j+1:n]
+		# TODO: not sure of best way without view. let's move on to view() for now
 	end
 	img′
 end
@@ -179,9 +194,14 @@ md"""
 👉 How many estimated allocations did this optimization reduce, and how can you explain most of them?
 """
 
+# ╔═╡ 0c4df2fc-584e-11eb-2763-c59d01e62006
+1029-687
+
 # ╔═╡ e49235a4-f367-11ea-3913-f54a4a6b2d6b
 no_vcat_observation = md"""
-<Your answer here>
+We removed `342` allocations. This matches the number of rows in the image.
+
+We remove an allocation because for each row,we no longer needed to do a copy (requiring an allocating) for `vcat`.    
 """
 
 # ╔═╡ 837c43a4-f368-11ea-00a3-990a45cb0cbd
@@ -201,9 +221,8 @@ function remove_in_each_row_views(img, column_numbers)
 	local img′ = similar(img, m, n-1) # create a similar image with one less column
 
 	for (i, j) in enumerate(column_numbers)
-		# EDIT THE FOLLOWING LINE and split it into two lines
-		# to avoid using `vcat`.
-		img′[i, :] .= vcat(img[i, 1:j-1], img[i, j+1:end])
+		img′[i, 1:j-1] .= @view img[i, 1:j-1]
+		img′[i, j:n-1] .= @view img[i, j+1:n]
 	end
 	img′
 end
@@ -238,7 +257,15 @@ Nice! If you did your optimizations right, you should be able to get down the es
 
 # ╔═╡ fd819dac-f368-11ea-33bb-17148387546a
 views_observation = md"""
-<your answer here>
+Our previous number of allocations was `687`, and our new total is `3`. What accounts for the difference?
+
+Previously, we had to allocate every time we created an array. We created two arrays per loop iteration (i.e. per "row" in the image). 
+
+```
+(342 rows) * (2 allocations / row) = 684 allocations
+```
+
+This matches up nicely! `687 - 684 = 3`. 
 """
 
 # ╔═╡ 318a2256-f369-11ea-23a9-2f74c566549b
@@ -331,7 +358,29 @@ random_seam(m, n, i) = reduce((a, b) -> [a..., clamp(last(a) + rand(-1:1), 1, n)
 # ╔═╡ abf20aa0-f31b-11ea-2548-9bea4fab4c37
 function greedy_seam(energies, starting_pixel::Int)
 	# you can delete the body of this function - it's just a placeholder.
-	random_seam(size(energies)..., starting_pixel)
+	col = starting_pixel
+	history = [] # TODO: preallocate, if desired
+	width = size(energies, 2)
+ 	
+	# push first value
+	push!(history, col)
+	for row in 1:(size(energies, 1)-1)
+		cₘᵢₙ = clamp(col-1, 1, width)
+		cₘₐₓ = clamp(col+1, 1, width)
+ 
+		low = Inf
+		for option in cₘᵢₙ:cₘₐₓ
+			if energies[row+1, option] < low
+				col = option
+				low = energies[row+1, option]
+			end
+		end
+		
+		push!(history, col)
+	end
+	
+	@assert length(history) == size(energies, 1) # must have 1 entry per row
+	return history
 end
 
 # ╔═╡ 5430d772-f397-11ea-2ed8-03ee06d02a22
@@ -404,13 +453,28 @@ Return these two values in a tuple.
 # ╔═╡ 8ec27ef8-f320-11ea-2573-c97b7b908cb7
 ## returns lowest possible sum energy at pixel (i, j), and the column to jump to in row i+1.
 function least_energy(energies, i, j)
-	# base case
-	# if i == something
-	#    return energies[...] # no need for recursive computation in the base case!
-	# end
-	#
+	# make sure j is in bounds with regards to columns
+	if j < 1 || j > size(energies, 2) 
+		return Inf, -1
+	end
+	
+	# base case is when we are on the bottom row
+	if i == size(energies, 1)
+	   return energies[i, j], -1 # no need for recursive computation in the base case!
+	end
+	
 	# induction
 	# combine results from recursive calls to `least_energy`.
+	options = [
+		least_energy(energies, i+1, j-1),
+		least_energy(energies, i+1, j),
+		least_energy(energies, i+1, j+1)
+	]
+	best_option = argmin(options)
+	
+	total_energy = energies[i,j] + options[best_option][1]
+	new_j = j + best_option - 2
+	return total_energy, new_j
 end
 
 # ╔═╡ a7f3d9f8-f3bb-11ea-0c1a-55bbb8408f09
@@ -448,8 +512,15 @@ This will give you the method used in the lecture to perform [exhaustive search 
 # ╔═╡ 85033040-f372-11ea-2c31-bb3147de3c0d
 function recursive_seam(energies, starting_pixel)
 	m, n = size(energies)
-	# Replace the following line with your code.
-	[rand(1:starting_pixel) for i=1:m]
+
+	history = zeros(Int, m)
+	
+	col = starting_pixel
+	for row in 1:m
+		history[row] = col
+		_, col = least_energy(energies, row, col)
+	end
+	return history
 end
 
 # ╔═╡ 1d55333c-f393-11ea-229a-5b1e9cabea6a
@@ -464,8 +535,21 @@ md"""
 """
 
 # ╔═╡ 6d993a5c-f373-11ea-0dde-c94e3bbd1552
-exhaustive_observation = md"""
-<your answer here>
+exhaustive_observation = md"""The recursive search explores a triangle (45° angle) in each direction, i.e. the below, where `E` are explored:
+```
+x x x x E x x x
+x x x E E E x x 
+x x E E E E E x
+x E E E E E E E
+```
+
+At each level we look left, middle, and right (in the downward direction), and continue to search this way all the way to the bottom. Only at the bottom do we hit a base case allowing us to recurse back.
+
+Even if a path is REALLY bad, we will still search all the way to the bottom.
+
+This is the most exhaustive search possible, given our approach to seam carving allows a step of at most 1 pixel to the left or right.
+
+In terms of number of possible seams, it's `O(3^m)`, where `m` is the number of rows. This is exponential time, which is computationally intractable for any large input. Even with as few as 10 to 100 rows, we should see poor performance.
 """
 
 # ╔═╡ ea417c2a-f373-11ea-3bb0-b1b5754f2fac
@@ -500,24 +584,58 @@ You are expected to read and understand the [documentation on dictionaries](http
 
 # ╔═╡ b1d09bc8-f320-11ea-26bb-0101c9a204e2
 function memoized_least_energy(energies, i, j, memory)
-	m, n = size(energies)
+	if haskey(memory, (i,j))
+		# exit quickly with memoized result
+		return memory[(i,j)]
+	end
 	
-	# Replace the following line with your code.
-	[starting_pixel for i=1:m]
+	# make sure j is in bounds with regards to columns
+	if j < 1 || j > size(energies, 2)
+		return Inf, -1
+	end
+
+	# base case is when we are on the bottom row
+	if i == size(energies, 1)
+	   return energies[i, j], -1 # no need for recursive computation in the base case!
+	end
+
+	# induction
+	# combine results from recursive calls to `least_energy`.
+	options = [
+		memoized_least_energy(energies, i+1, j-1, memory),
+		memoized_least_energy(energies, i+1, j, memory),
+		memoized_least_energy(energies, i+1, j+1, memory)
+	]
+	best_option = argmin(options)
+
+	total_energy = energies[i,j] + options[best_option][1]
+	new_j = j + best_option - 2
+	
+	memory[(i,j)] = (total_energy, new_j)
+	return memory[(i,j)]
 end
 
 # ╔═╡ 3e8b0868-f3bd-11ea-0c15-011bbd6ac051
 function recursive_memoized_seam(energies, starting_pixel)
-	memory = Dict{Tuple{Int,Int}, Float64}() # location => least energy.
+	memory = Dict{Tuple{Int,Int}, Tuple{Float64, Int64}}() # location => least energy.
 	                                         # pass this every time you call memoized_least_energy.
 	m, n = size(energies)
 	
 	# Replace the following line with your code.
-	[rand(1:starting_pixel) for i=1:m]
+	history = zeros(Int, m)	
+	col = starting_pixel
+	for row in 1:m
+		history[row] = col
+		_, col = memoized_least_energy(energies, row, col, memory)
+	end
+	return history
 end
 
 # ╔═╡ 4e3bcf88-f3c5-11ea-3ada-2ff9213647b7
 md"Compute shrunk image: $(@bind shrink_dict CheckBox())"
+
+# ╔═╡ c85fbcea-5868-11eb-019c-6b7043428b4f
+img_small = imresize(img, ratio=1/5)
 
 # ╔═╡ cf39fa2a-f374-11ea-0680-55817de1b837
 md"""
@@ -534,8 +652,35 @@ Write a variation of `matrix_memoized_least_energy` and `matrix_memoized_seam` w
 function matrix_memoized_least_energy(energies, i, j, memory)
 	m, n = size(energies)
 	
-	# Replace the following line with your code.
-	[starting_pixel for i=1:m]
+	# make sure j is in bounds with regards to columns
+	if j < 1 || j > n
+		return Inf, -1
+	end
+	
+	if memory[i,j] > 0
+		# exit quickly with memoized result
+		return memory[i,j]
+	end
+	
+	# base case is when we are on the bottom row
+	if i == size(energies, 1)
+	   return energies[i, j], -1 # no need for recursive computation in the base case!
+	end
+
+	# induction
+	# combine results from recursive calls to `least_energy`.
+	options = [
+		matrix_memoized_least_energy(energies, i+1, j-1, memory),
+		matrix_memoized_least_energy(energies, i+1, j, memory),
+		matrix_memoized_least_energy(energies, i+1, j+1, memory)
+	]
+	best_option = argmin(options)
+
+	total_energy = energies[i,j] + options[best_option][1]
+	new_j = j + best_option - 2
+	
+	memory[i,j] = (total_energy, new_j)
+	return memory[i,j]
 end
 
 # ╔═╡ be7d40e2-f320-11ea-1b56-dff2a0a16e8d
@@ -544,7 +689,13 @@ function matrix_memoized_seam(energies, starting_pixel)
 	m, n = size(energies)
 	
 	# Replace the following line with your code.
-	[starting_pixel for i=1:m]
+	history = zeros(Int, m)	
+	col = starting_pixel
+	for row in 1:m
+		history[row] = col
+		_, col = matrix_memoized_least_energy(energies, row, col, memory)
+	end
+	return history
 end
 
 # ╔═╡ 507f3870-f3c5-11ea-11f6-ada3bb087634
@@ -563,7 +714,19 @@ Now it's easy to see that the above algorithm is equivalent to one that populate
 
 # ╔═╡ ff055726-f320-11ea-32f6-2bf38d7dd310
 function least_energy_matrix(energies)
-	copy(energies)
+	out = copy(energies)
+	m, n = size(out)
+	for row in reverse(1:m-1)
+		for col in 1:n
+			# get values of 2 or 3 children positions
+			cols = unique([clamp(col-1,1,n), col, clamp(col+1,1,n)])
+			children = map(x->energies[row+1, x], cols)
+			
+			# record least energy for this position 
+			out[row,col] = energies[row,col] + min(children...)
+		end
+	end
+	return out
 end
 
 # ╔═╡ 92e19f22-f37b-11ea-25f7-e321337e375e
@@ -577,9 +740,25 @@ md"""
 function seam_from_precomputed_least_energy(energies, starting_pixel::Int)
 	least_energies = least_energy_matrix(energies)
 	m, n = size(least_energies)
-	
-	# Replace the following line with your code.
-	[starting_pixel for i=1:m]
+
+	seam = []
+	col = starting_pixel
+	for row in 1:m
+		push!(seam, col)
+		if row == m
+			break
+		end
+		
+		options = [
+			col > 1 ? least_energies[row+1, col-1] : Inf,
+			least_energies[row+1, col],
+			col < n ? least_energies[row+1, col+1] : Inf,
+		]
+		offset = argmin(options) - 2
+		col += offset
+	end
+		
+	return seam
 end
 
 # ╔═╡ 51df0c98-f3c5-11ea-25b8-af41dc182bac
@@ -642,8 +821,11 @@ end
 
 # ╔═╡ 4e3ef866-f3c5-11ea-3fb0-27d1ca9a9a3f
 if shrink_dict
-	dict_carved = shrink_n(img, 200, recursive_memoized_seam)
-	md"Shrink by: $(@bind dict_n Slider(1:200, show_value=true))"
+	# TODO: @n - was this supposed to work with default of n = 200 on the large picture?
+	# for me, n=100 on img_small (ratio=1/3) takes ~15s
+	n = 20
+	dict_carved = shrink_n(img_small, n, recursive_memoized_seam)
+	md"Shrink by: $(@bind dict_n Slider(1:n, show_value=true))"
 end
 
 # ╔═╡ 6e73b1da-f3c5-11ea-145f-6383effe8a89
@@ -653,8 +835,9 @@ end
 
 # ╔═╡ 50829af6-f3c5-11ea-04a8-0535edd3b0aa
 if shrink_matrix
-	matrix_carved = shrink_n(img, 200, matrix_memoized_seam)
-	md"Shrink by: $(@bind matrix_n Slider(1:200, show_value=true))"
+	matrix_carved = shrink_n(img_small, n, matrix_memoized_seam)
+	# matrix_carved = shrink_n(img, 200, matrix_memoized_seam)
+	md"Shrink by: $(@bind matrix_n Slider(1:n, show_value=true))"
 end
 
 # ╔═╡ 9e56ecfa-f3c5-11ea-2e90-3b1839d12038
@@ -664,8 +847,9 @@ end
 
 # ╔═╡ 51e28596-f3c5-11ea-2237-2b72bbfaa001
 if shrink_bottomup
-	bottomup_carved = shrink_n(img, 200, seam_from_precomputed_least_energy)
-	md"Shrink by: $(@bind bottomup_n Slider(1:200, show_value=true))"
+	# bottomup_carved = shrink_n(img, 200, seam_from_precomputed_least_energy)
+	bottomup_carved = shrink_n(img_small, n, seam_from_precomputed_least_energy)
+	md"Shrink by: $(@bind bottomup_n Slider(1:n, show_value=true))"
 end
 
 # ╔═╡ 0a10acd8-f3c6-11ea-3e2f-7530a0af8c7f
@@ -690,6 +874,15 @@ pika = decimate(load(download("https://art.pixilart.com/901d53bcda6b27b.png")),1
 
 # ╔═╡ 73b52fd6-f3b9-11ea-14ed-ebfcab1ce6aa
 size(pika)
+
+# ╔═╡ fcbde1e0-5860-11eb-0a45-1b2609b9ea0b
+energy(pika)
+
+# ╔═╡ d098b506-5860-11eb-1535-f73267837a52
+Gray.(energy(pika))
+
+# ╔═╡ a4aa3f30-5860-11eb-391e-0b4959677d87
+least_energy(energy(pika), 1,7) # TODO: Is this the CORRECT result? it doesn't seem to verify that right now.
 
 # ╔═╡ fa8e2772-f3b6-11ea-30f7-699717693164
 if compute_access
@@ -834,6 +1027,7 @@ bigbreak
 # ╔═╡ Cell order:
 # ╟─e6b6760a-f37f-11ea-3ae1-65443ef5a81a
 # ╟─ec66314e-f37f-11ea-0af4-31da0584e881
+# ╠═bdd26854-554d-11eb-0648-057c81666744
 # ╟─85cfbd10-f384-11ea-31dc-b5693630a4c5
 # ╠═33e43c7c-f381-11ea-3abc-c942327456b1
 # ╟─938185ec-f384-11ea-21dc-b56b7469f798
@@ -856,6 +1050,7 @@ bigbreak
 # ╟─9e149cd2-f367-11ea-28ef-b9533e8a77bb
 # ╟─e3519118-f387-11ea-0c61-e1c2de1c24c1
 # ╟─ba1619d4-f389-11ea-2b3f-fd9ba71cf7e3
+# ╠═0c4df2fc-584e-11eb-2763-c59d01e62006
 # ╠═e49235a4-f367-11ea-3913-f54a4a6b2d6b
 # ╟─145c0f58-f384-11ea-2b71-09ae83f66da2
 # ╟─837c43a4-f368-11ea-00a3-990a45cb0cbd
@@ -887,12 +1082,12 @@ bigbreak
 # ╟─c3543ea4-f393-11ea-39c8-37747f113b96
 # ╟─2f9cbea8-f3a1-11ea-20c6-01fd1464a592
 # ╠═abf20aa0-f31b-11ea-2548-9bea4fab4c37
-# ╟─5430d772-f397-11ea-2ed8-03ee06d02a22
+# ╠═5430d772-f397-11ea-2ed8-03ee06d02a22
 # ╟─f580527e-f397-11ea-055f-bb9ea8f12015
 # ╟─6f52c1a2-f395-11ea-0c8a-138a77f03803
 # ╟─2a7e49b8-f395-11ea-0058-013e51baa554
 # ╟─7ddee6fc-f394-11ea-31fc-5bd665a65bef
-# ╟─980b1104-f394-11ea-0948-21002f26ee25
+# ╠═980b1104-f394-11ea-0948-21002f26ee25
 # ╟─9945ae78-f395-11ea-1d78-cf6ad19606c8
 # ╟─87efe4c2-f38d-11ea-39cc-bdfa11298317
 # ╟─f6571d86-f388-11ea-0390-05592acb9195
@@ -906,6 +1101,9 @@ bigbreak
 # ╠═8ec27ef8-f320-11ea-2573-c97b7b908cb7
 # ╟─9f18efe2-f38e-11ea-0871-6d7760d0b2f6
 # ╟─a7f3d9f8-f3bb-11ea-0c1a-55bbb8408f09
+# ╠═fcbde1e0-5860-11eb-0a45-1b2609b9ea0b
+# ╠═d098b506-5860-11eb-1535-f73267837a52
+# ╠═a4aa3f30-5860-11eb-391e-0b4959677d87
 # ╟─fa8e2772-f3b6-11ea-30f7-699717693164
 # ╟─18e0fd8a-f3bc-11ea-0713-fbf74d5fa41a
 # ╟─cbf29020-f3ba-11ea-2cb0-b92836f3d04b
@@ -915,12 +1113,13 @@ bigbreak
 # ╠═d88bc272-f392-11ea-0efd-15e0e2b2cd4e
 # ╠═e66ef06a-f392-11ea-30ab-7160e7723a17
 # ╟─c572f6ce-f372-11ea-3c9a-e3a21384edca
-# ╠═6d993a5c-f373-11ea-0dde-c94e3bbd1552
-# ╠═ea417c2a-f373-11ea-3bb0-b1b5754f2fac
+# ╟─6d993a5c-f373-11ea-0dde-c94e3bbd1552
+# ╟─ea417c2a-f373-11ea-3bb0-b1b5754f2fac
 # ╟─56a7f954-f374-11ea-0391-f79b75195f4d
 # ╠═b1d09bc8-f320-11ea-26bb-0101c9a204e2
 # ╠═3e8b0868-f3bd-11ea-0c15-011bbd6ac051
 # ╠═4e3bcf88-f3c5-11ea-3ada-2ff9213647b7
+# ╠═c85fbcea-5868-11eb-019c-6b7043428b4f
 # ╠═4e3ef866-f3c5-11ea-3fb0-27d1ca9a9a3f
 # ╠═6e73b1da-f3c5-11ea-145f-6383effe8a89
 # ╟─cf39fa2a-f374-11ea-0680-55817de1b837
@@ -942,7 +1141,7 @@ bigbreak
 # ╟─0fbe2af6-f381-11ea-2f41-23cd1cf930d9
 # ╟─48089a00-f321-11ea-1479-e74ba71df067
 # ╟─6b4d6584-f3be-11ea-131d-e5bdefcc791b
-# ╟─437ba6ce-f37d-11ea-1010-5f6a6e282f9b
+# ╠═437ba6ce-f37d-11ea-1010-5f6a6e282f9b
 # ╟─ef88c388-f388-11ea-3828-ff4db4d1874e
 # ╟─ef26374a-f388-11ea-0b4e-67314a9a9094
 # ╟─6bdbcf4c-f321-11ea-0288-fb16ff1ec526
