@@ -216,7 +216,7 @@ $(html"<br>")
 # ╔═╡ 4affa858-f92e-11ea-3ece-258897c37e51
 function clean(text)
 	# we turn everything to lowercase to keep the number of letters small
-	missing
+	return filter(isinalphabet, lowercase(unaccent(text)))
 end
 
 # ╔═╡ e00d521a-f992-11ea-11e0-e9da8255b23b
@@ -260,7 +260,13 @@ $(html"<br>")
 
 # ╔═╡ 92bf9fd2-f9a5-11ea-25c7-5966e44db6c6
 unused_letters = let
-	['a', 'b']
+	out = []
+	for (idx, freq) in enumerate(sample_freqs)
+		if freq == 0
+			push!(out, alphabet[idx])
+		end
+	end
+	out
 end
 
 # ╔═╡ 01215e9a-f9a9-11ea-363b-67392741c8d4
@@ -1176,7 +1182,7 @@ bigbreak
 # ╟─571d28d6-f960-11ea-1b2e-d5977ecbbb11
 # ╠═6a64ab12-f960-11ea-0d92-5b88943cdb1a
 # ╟─603741c2-f9a4-11ea-37ce-1b36ecc83f45
-# ╟─b3de6260-f9a4-11ea-1bae-9153a92c3fe5
+# ╠═b3de6260-f9a4-11ea-1bae-9153a92c3fe5
 # ╠═a6c36bd6-f9a4-11ea-1aba-f75cecc90320
 # ╟─6d3f9dae-f9a5-11ea-3228-d147435e266d
 # ╠═92bf9fd2-f9a5-11ea-25c7-5966e44db6c6
