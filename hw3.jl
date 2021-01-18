@@ -334,13 +334,13 @@ end
 md"""👉 What is the frequency of the combination `"th"`?"""
 
 # ╔═╡ 1b4c0c28-f9ab-11ea-03a6-69f69f7f90ed
-th_frequency = missing
+th_frequency = sample_freq_matrix[index_of_letter('t'), index_of_letter('h')]
 
 # ╔═╡ 1f94e0a2-f9ab-11ea-1347-7dd906ebb09d
 md"""👉 What about `"ht"`?"""
 
 # ╔═╡ 41b2df7c-f931-11ea-112e-ede3b16f357a
-ht_frequency = missing
+ht_frequency = sample_freq_matrix[index_of_letter('h'), index_of_letter('t')]
 
 # ╔═╡ 1dd1e2f4-f930-11ea-312c-5ff9e109c7f6
 md"""
@@ -348,7 +348,9 @@ md"""
 """
 
 # ╔═╡ 65c92cac-f930-11ea-20b1-6b8f45b3f262
-double_letters = ['x', 'y']
+double_letters = let
+	filter(x -> x != false, [sample_freq_matrix[index_of_letter(x), index_of_letter(x)] > 0 ? x : false for x in alphabet])
+end
 
 # ╔═╡ 4582ebf4-f930-11ea-03b2-bf4da1a8f8df
 md"""
@@ -356,7 +358,7 @@ md"""
 """
 
 # ╔═╡ 7898b76a-f930-11ea-2b7e-8126ec2b8ffd
-most_likely_to_follow_w = 'x'
+most_likely_to_follow_w = alphabet[argmax(sample_freq_matrix[index_of_letter('w'), :])]
 
 # ╔═╡ 458cd100-f930-11ea-24b8-41a49f6596a0
 md"""
@@ -364,16 +366,46 @@ md"""
 """
 
 # ╔═╡ bc401bee-f931-11ea-09cc-c5efe2f11194
-most_likely_to_precede_w = 'x'
+most_likely_to_precede_w = alphabet[argmax(sample_freq_matrix[:, index_of_letter('w')])]
 
 # ╔═╡ 45c20988-f930-11ea-1d12-b782d2c01c11
 md"""
 👉 What is the sum of each row? What is the sum of each column? How can we interpret these values?"
 """
 
+# ╔═╡ fb9518d0-5953-11eb-3ce2-2db0adb73daf
+sample_freq_matrix
+
+# ╔═╡ ba17f01c-5953-11eb-037b-b59677ac89e3
+sample_freq_matrix[index_of_letter('a'), :]
+
+# ╔═╡ b2942d60-5953-11eb-2079-97cc1742d422
+sample_freq_matrix[:, index_of_letter('a')]
+
+# ╔═╡ 643ce158-5952-11eb-1baf-9b50bb5ba99f
+begin
+	function freq_bigram_starts_with_letter(freqs, letter)
+		# sum of row
+		return sum(freqs[index_of_letter(letter), :])
+	end
+	
+	function freq_bigram_ends_with_letter(freqs, letter)
+		# sum of column
+		return sum(freqs[:, index_of_letter(letter)])	
+	end
+end
+
+# ╔═╡ 07d617a8-5953-11eb-236c-437b30ab67fd
+map(l -> freq_bigram_starts_with_letter(sample_freq_matrix, l), alphabet)
+
+# ╔═╡ 823a2098-5953-11eb-1deb-b3156804a02b
+map(l -> freq_bigram_ends_with_letter(sample_freq_matrix, l), alphabet)
+
 # ╔═╡ cc62929e-f9af-11ea-06b9-439ac08dcb52
 row_col_answer = md"""
+sum of each row = % of bigrams that begin with that row's letter
 
+sum of each col = % of bigrams that end with that row's letter
 """
 
 # ╔═╡ 2f8dedfc-fb98-11ea-23d7-2159bdb6a299
@@ -458,7 +490,9 @@ The only question left is: How do we compare two matrices? When two matrices are
 
 # ╔═╡ 13c89272-f934-11ea-07fe-91b5d56dedf8
 function matrix_distance(A, B)
-	missing # do something with A .- B
+	subtract = A .- B
+	magnitudes = abs.(subtract)
+	return sum(magnitudes)
 end
 
 # ╔═╡ 7d60f056-f931-11ea-39ae-5fa18a955a77
@@ -1215,12 +1249,18 @@ bigbreak
 # ╠═65c92cac-f930-11ea-20b1-6b8f45b3f262
 # ╟─671525cc-f930-11ea-0e71-df9d4aae1c05
 # ╟─4582ebf4-f930-11ea-03b2-bf4da1a8f8df
-# ╟─7898b76a-f930-11ea-2b7e-8126ec2b8ffd
-# ╟─a5fbba46-f931-11ea-33e1-054be53d986c
-# ╟─458cd100-f930-11ea-24b8-41a49f6596a0
+# ╠═7898b76a-f930-11ea-2b7e-8126ec2b8ffd
+# ╠═a5fbba46-f931-11ea-33e1-054be53d986c
+# ╠═458cd100-f930-11ea-24b8-41a49f6596a0
 # ╠═bc401bee-f931-11ea-09cc-c5efe2f11194
 # ╟─ba695f6a-f931-11ea-0fbb-c3ef1374270e
-# ╟─45c20988-f930-11ea-1d12-b782d2c01c11
+# ╠═45c20988-f930-11ea-1d12-b782d2c01c11
+# ╠═fb9518d0-5953-11eb-3ce2-2db0adb73daf
+# ╠═ba17f01c-5953-11eb-037b-b59677ac89e3
+# ╠═b2942d60-5953-11eb-2079-97cc1742d422
+# ╠═643ce158-5952-11eb-1baf-9b50bb5ba99f
+# ╠═07d617a8-5953-11eb-236c-437b30ab67fd
+# ╠═823a2098-5953-11eb-1deb-b3156804a02b
 # ╠═cc62929e-f9af-11ea-06b9-439ac08dcb52
 # ╟─d3d7bd9c-f9af-11ea-1570-75856615eb5d
 # ╟─2f8dedfc-fb98-11ea-23d7-2159bdb6a299
