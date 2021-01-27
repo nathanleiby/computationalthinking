@@ -52,3 +52,10 @@
 - [ ] Explore writing Julia within VSCode. How is that vs Pluto?
   - How is the feedback loop for viewing plots and playing with images? (https://www.julia-vscode.org/)
   - Is there a Pluto binding so I can edit code in VSCode but otherwise render in Pluto? (https://github.com/fonsp/Pluto.jl/issues/303)
+- Math / theory review
+  - https://en.wikipedia.org/wiki/Eigenvalues_and_eigenvectors
+  - https://en.wikipedia.org/wiki/Singular_value_decomposition
+    - SVD paper: http://languagelog.ldc.upenn.edu/myl/Moler1983.pdf
+  - https://en.wikipedia.org/wiki/Law_of_large_numbers
+  - https://en.wikipedia.org/wiki/Central_limit_theorem
+- [ ] Read (or skim) this book on Julia lang: https://syl1.gitbook.io/julia-language-a-concise-tutorial/language-core/getting-started
