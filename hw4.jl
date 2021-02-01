@@ -256,9 +256,10 @@ md"""
 
 # ╔═╡ f1f89502-0494-11eb-2303-0b79d8bbd13f
 function frequencies_plot_with_mean(data)
-	# start out by copying the frequencies_plot_with_maximum function
+	base = bar(frequencies(data))
+	vline!(base, [mean(data)], label="mean")
 	
-	return missing
+	return base
 end
 
 # ╔═╡ 06089d1e-0495-11eb-0ace-a7a7dc60e5b2
@@ -270,12 +271,23 @@ md"""
 """
 
 # ╔═╡ bb63f3cc-042f-11eb-04ff-a128aec3c378
+@bind p_interactive Slider(0.01:0.01:1; show_value=true)
 
+# ╔═╡ c7d2edc6-6464-11eb-0cab-d523ea9a6df5
+@bind N_interactive Slider(1:10_000; show_value=true)
+
+# ╔═╡ ebf78608-6464-11eb-0c53-2f6026599c4e
+frequencies_plot_with_mean(do_experiment(p_interactive, N_interactive))
 
 # ╔═╡ bb8aeb58-042f-11eb-18b8-f995631df619
 md"""
 As you separately vary $p$ and $N$, what do you observe about the **mean** in each case? Does that make sense?
 """
+
+# ╔═╡ 4d41e566-6465-11eb-14c3-e96bb3da0ef8
+md"As I vary $p$, the mean itself is changed. A lower $p$ relates in a higher value of the mean, and vice-versa.
+
+However, as I vary $N$, as soon as the number gets reasonably large (100, 1000), we can see the mean begin to stabilize. The randomly generated sample's mean converges asymptotically towards the mathematical mean determined by the parameters. Visually, the graph's curve also gets smoother."
 
 # ╔═╡ 778ec25c-0403-11eb-3146-1d11c294bb1f
 md"""
@@ -284,7 +296,20 @@ md"""
 """
 
 # ╔═╡ 7bb8e426-0495-11eb-3a8b-cbbab61a1631
-
+let
+	data = do_experiment(p_interactive, N_interactive)
+	p = frequencies_plot_with_mean(data)
+	
+	# normal distribution
+	μ = 0
+	# TODO: how to think about the right values for these based on p and N?
+	σ = 3
+	c = 20_000
+	f(x) = c * exp(-1/2 * ((x-μ) / σ )^2) / (σ * sqrt(2 * π)) 
+	
+	
+	plot!(p, f, 0:maximum(data))
+end
 
 # ╔═╡ 77db111e-0403-11eb-2dea-4b42ceed65d6
 md"""
@@ -294,7 +319,18 @@ md"""
 """
 
 # ╔═╡ 7335de44-042f-11eb-2873-8bceef722432
-
+let  
+  	N = 10_000
+	r = 0.001:0.001:1
+  	a = zeros(Float64, length(r))
+  	for (i, p) in enumerate(r)
+    	a[i] = mean(do_experiment(p, N)) 
+  	end
+   	
+	plot(a)
+	
+	# mean time to recover is (1/p)
+end
 
 # ╔═╡ 61789646-0403-11eb-0042-f3b8308f11ba
 md"""
@@ -1064,12 +1100,15 @@ bigbreak
 # ╠═06089d1e-0495-11eb-0ace-a7a7dc60e5b2
 # ╟─77b54c10-0403-11eb-16ad-65374d29a817
 # ╠═bb63f3cc-042f-11eb-04ff-a128aec3c378
+# ╠═c7d2edc6-6464-11eb-0cab-d523ea9a6df5
+# ╠═ebf78608-6464-11eb-0c53-2f6026599c4e
 # ╟─bb8aeb58-042f-11eb-18b8-f995631df619
+# ╠═4d41e566-6465-11eb-14c3-e96bb3da0ef8
 # ╟─778ec25c-0403-11eb-3146-1d11c294bb1f
 # ╠═7bb8e426-0495-11eb-3a8b-cbbab61a1631
-# ╟─77db111e-0403-11eb-2dea-4b42ceed65d6
+# ╠═77db111e-0403-11eb-2dea-4b42ceed65d6
 # ╠═7335de44-042f-11eb-2873-8bceef722432
-# ╟─61789646-0403-11eb-0042-f3b8308f11ba
+# ╠═61789646-0403-11eb-0042-f3b8308f11ba
 # ╠═26f84600-041d-11eb-1856-b12a3e5c1dc7
 # ╟─271ec5f0-041d-11eb-041b-db46ec1465e0
 # ╠═7f4e121c-041d-11eb-0dff-cd0cbfdfd606
