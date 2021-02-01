@@ -1,4 +1,11 @@
 # Discussion items:
+- L10
+  - Julia reply has several special modes
+    - `?` for help
+    - `]` for package manager
+    - `;` for shell
+  - Lots of tech challenges until ~25m .. that's wher most graph/epidemiology content kicks in. SIR code @29m, Lightgraphs @33m
+  - 36m he mentions "lots of other ways to spread information on a graph": SIR, forest fire, rumor mongering.. might be fun to explore
 - Lecture 7
   - Whoa! A date window is a blurring aka convolution!
   - gotcha in lecture: `head` (deprecated, even tho common outside Julia) vs `first`
