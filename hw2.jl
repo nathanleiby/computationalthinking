@@ -129,6 +129,24 @@ function remove_in_each_row(img, column_numbers)
 	img′
 end
 
+# ╔═╡ 6da2a372-5de4-11eb-0c0b-d35fbd052c3f
+a_comma = [1,2,3]
+
+# ╔═╡ 6591a644-5de4-11eb-3f11-0f76590b379e
+a_space = [1 2 3]
+
+# ╔═╡ 7d1f2190-5de4-11eb-1fbd-5340a1dc7a0f
+a_semi = [1;2;3]
+
+# ╔═╡ dd7e15dc-5de4-11eb-10d7-e1b60652f15d
+c = reshape(collect(1:16), 4,4)
+
+# ╔═╡ 6a2fcaca-5de5-11eb-3278-63a43732f58d
+cat([1,2,3], [4,5,6]; dims=2)
+
+# ╔═╡ 04e1cef2-5de5-11eb-20c5-2fd85a16f8bb
+c[:,3]
+
 # ╔═╡ c075a8e6-f382-11ea-2263-cd9507324f4f
 md"Let's use it to remove the pixels on the diagonal. These are the image dimensions before and after doing so:"
 
@@ -720,7 +738,7 @@ function least_energy_matrix(energies)
 		for col in 1:n
 			# get values of 2 or 3 children positions
 			cols = unique([clamp(col-1,1,n), col, clamp(col+1,1,n)])
-			children = map(x->energies[row+1, x], cols)
+			children = energies[row+1, cols] 
 			
 			# record least energy for this position 
 			out[row,col] = energies[row,col] + min(children...)
@@ -738,7 +756,8 @@ md"""
 
 # ╔═╡ 795eb2c4-f37b-11ea-01e1-1dbac3c80c13
 function seam_from_precomputed_least_energy(energies, starting_pixel::Int)
-	least_energies = least_energy_matrix(energies)
+	# least_energies = least_energy_matrix(energies)
+	least_energies = energies
 	m, n = size(least_energies)
 
 	seam = zeros(Int, m)
@@ -759,6 +778,12 @@ function seam_from_precomputed_least_energy(energies, starting_pixel::Int)
 	end
 		
 	return seam
+end
+
+# ╔═╡ 48a5c1fa-5df1-11eb-316b-5580665476fd
+begin
+	e = energy(img)
+	least_energy_matrix(e)
 end
 
 # ╔═╡ 51df0c98-f3c5-11ea-25b8-af41dc182bac
@@ -849,9 +874,9 @@ end
 if shrink_bottomup
 	# N = number of seam carves to pre-compute
 	# img_size = effort per seam carving
-	bottomup_carved_n = 3
+	bottomup_carved_n = 200
 	# bottomup_carved = shrink_n(img, 200, seam_from_precomputed_least_energy)
-	bottomup_carved = shrink_n(img_small, bottomup_carved_n, seam_from_precomputed_least_energy)
+	bottomup_carved = shrink_n(img, bottomup_carved_n, seam_from_precomputed_least_energy)
 	md"Shrink by: $(@bind bottomup_n Slider(1:bottomup_carved_n, show_value=true))"
 end
 
@@ -1041,7 +1066,13 @@ bigbreak
 # ╟─b49a21a6-f381-11ea-1a98-7f144c55c9b7
 # ╟─b49e8cc8-f381-11ea-1056-91668ac6ae4e
 # ╠═e799be82-f317-11ea-3ae4-6d13ece3fe10
-# ╟─c075a8e6-f382-11ea-2263-cd9507324f4f
+# ╠═6da2a372-5de4-11eb-0c0b-d35fbd052c3f
+# ╠═6591a644-5de4-11eb-3f11-0f76590b379e
+# ╠═7d1f2190-5de4-11eb-1fbd-5340a1dc7a0f
+# ╠═dd7e15dc-5de4-11eb-10d7-e1b60652f15d
+# ╠═6a2fcaca-5de5-11eb-3278-63a43732f58d
+# ╠═04e1cef2-5de5-11eb-20c5-2fd85a16f8bb
+# ╠═c075a8e6-f382-11ea-2263-cd9507324f4f
 # ╠═9cced1a8-f326-11ea-0759-0b2f22e5a1db
 # ╟─c086bd1e-f384-11ea-3b26-2da9e24360ca
 # ╟─1d893998-f366-11ea-0828-512de0c44915
@@ -1050,8 +1081,8 @@ bigbreak
 # ╟─f7915918-f366-11ea-2c46-2f4671ae8a22
 # ╠═37d4ea5c-f327-11ea-2cc5-e3774c232c2b
 # ╠═67717d02-f327-11ea-0988-bfe661f57f77
-# ╟─9e149cd2-f367-11ea-28ef-b9533e8a77bb
-# ╟─e3519118-f387-11ea-0c61-e1c2de1c24c1
+# ╠═9e149cd2-f367-11ea-28ef-b9533e8a77bb
+# ╠═e3519118-f387-11ea-0c61-e1c2de1c24c1
 # ╟─ba1619d4-f389-11ea-2b3f-fd9ba71cf7e3
 # ╠═0c4df2fc-584e-11eb-2763-c59d01e62006
 # ╠═e49235a4-f367-11ea-3913-f54a4a6b2d6b
@@ -1093,7 +1124,7 @@ bigbreak
 # ╠═980b1104-f394-11ea-0948-21002f26ee25
 # ╟─9945ae78-f395-11ea-1d78-cf6ad19606c8
 # ╟─87efe4c2-f38d-11ea-39cc-bdfa11298317
-# ╟─f6571d86-f388-11ea-0390-05592acb9195
+# ╠═f6571d86-f388-11ea-0390-05592acb9195
 # ╟─f626b222-f388-11ea-0d94-1736759b5f52
 # ╟─52452d26-f36c-11ea-01a6-313114b4445d
 # ╠═2a98f268-f3b6-11ea-1eea-81c28256a19e
@@ -1137,6 +1168,7 @@ bigbreak
 # ╟─e0622780-f3b4-11ea-1f44-59fb9c5d2ebd
 # ╟─92e19f22-f37b-11ea-25f7-e321337e375e
 # ╠═795eb2c4-f37b-11ea-01e1-1dbac3c80c13
+# ╠═48a5c1fa-5df1-11eb-316b-5580665476fd
 # ╠═51df0c98-f3c5-11ea-25b8-af41dc182bac
 # ╠═51e28596-f3c5-11ea-2237-2b72bbfaa001
 # ╠═0a10acd8-f3c6-11ea-3e2f-7530a0af8c7f
