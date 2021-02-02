@@ -321,16 +321,28 @@ md"""
 # ╔═╡ 7335de44-042f-11eb-2873-8bceef722432
 let  
   	N = 10_000
-	r = 0.001:0.001:1
-  	a = zeros(Float64, length(r))
-  	for (i, p) in enumerate(r)
-    	a[i] = mean(do_experiment(p, N)) 
+	
+	step = 0.001
+	x = step:step:1
+	y = zeros(Float64, length(x))
+  	for (i, p) in enumerate(x)
+    	y[i] = mean(do_experiment(p, N))
   	end
    	
-	plot(a)
-	
+	plot(
+		x,
+		y,
+		xlabel = "p",
+		ylabel = "<τ(p)>",
+	)
 	# mean time to recover is (1/p)
 end
+
+# ╔═╡ 0585cb94-651d-11eb-0503-f9cc8800dc6f
+md"This graph shows that the mean time to recovery converges to $1/p$.
+
+$\lim_{N\to\infty} \tau (p) = 1/p$
+"
 
 # ╔═╡ 61789646-0403-11eb-0042-f3b8308f11ba
 md"""
@@ -1108,6 +1120,7 @@ bigbreak
 # ╠═7bb8e426-0495-11eb-3a8b-cbbab61a1631
 # ╠═77db111e-0403-11eb-2dea-4b42ceed65d6
 # ╠═7335de44-042f-11eb-2873-8bceef722432
+# ╟─0585cb94-651d-11eb-0503-f9cc8800dc6f
 # ╠═61789646-0403-11eb-0042-f3b8308f11ba
 # ╠═26f84600-041d-11eb-1856-b12a3e5c1dc7
 # ╟─271ec5f0-041d-11eb-041b-db46ec1465e0
