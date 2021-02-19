@@ -1,32 +1,15 @@
 # Discussion items:
+- L12
+  - This math and the derivations were most challenging for me, as I haven't done calculus in a long time and never studied differential equations
+- L11
+  - Nouns and verbs.. how did he draw that nice type hierarchy? look into the code in that Pluto notebook..
 - L10
   - Julia reply has several special modes
     - `?` for help
     - `]` for package manager
     - `;` for shell
-  - Lots of tech challenges until ~25m .. that's wher most graph/epidemiology content kicks in. SIR code @29m, Lightgraphs @33m
-  - 36m he mentions "lots of other ways to spread information on a graph": SIR, forest fire, rumor mongering.. might be fun to explore
 - Lecture 7
-  - Whoa! A date window is a blurring aka convolution!
-  - gotcha in lecture: `head` (deprecated, even tho common outside Julia) vs `first`
   - When to use symbol `:country` or string `"country"`?
-  - `DataFrameRow` vs "`DataFrame` with one row", reminds me of the confusion around extracting a column vector when pulling a single row of a multidimensional array. The same syntax works there to get a row, if desired!
-    - `a = rand(2,2)` .. then compare`a[1, :]` which gets a Vector vs `a[1:1, :]` which gets a 1x2 Array (is this effectively the same thing as a row vector, or is that another type?)
-    ```julia
-    julia> a = rand(2,2)
-    2×2 Array{Float64,2}:
-    0.180562  0.673759
-    0.130636  0.22324
-
-    julia> a[1, :]
-    2-element Array{Float64,1}:
-    0.18056244592673543
-    0.6737588383904296
-
-    julia> a[1:1, :]
-    1×2 Array{Float64,2}:
-    0.180562  0.673759
-    ```
 - Is there a magical way to discover methods from a package more easily? e.g. how can I know all the useful functions I might apply to a dataframe? autocompletion to discover functionality (or simply remember a method name) seemsharder in Julia
 - Discuss idea of a "reflected Kernel" (see `convolve` fn in HW2). Why reflected?
   - also, discuss why the function name is `filter`.. the function commit actually has a nice explainer under "Details"!
