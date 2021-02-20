@@ -281,6 +281,7 @@ One relatively simple boundary condition is a **collision boundary**:
 """
 
 # ╔═╡ 0237ebac-0a69-11eb-2272-35ea4e845d84
+""" collide_boundary(c::Coordinate, L::Number) """
 function collide_boundary(c::Coordinate, L::Number)
 	return Coordinate(clamp(c.x, -L, L), clamp(c.y, -L, L))
 end
@@ -479,14 +480,37 @@ md"""
 
 Write a function `interact!` that takes two `Agent`s and a `CollisionInfectionRecovery`, and:
 
-- If the agents are at the same spot, causes a susceptible agent to communicate the desease from an infectious one with the correct probability.
+- If the agents are at the same spot, causes a susceptible agent to communicate the disease from an infectious one with the correct probability.
 - if the first agent is infectious, it recovers with some probability
 """
 
 # ╔═╡ d1bcd5c4-0a4b-11eb-1218-7531e367a7ff
-#function interact!(agent::Agent, source::Agent, infection::CollisionInfectionRecovery)
-	#missing
-#end
+function interact!(a::Agent, b::Agent, infection::CollisionInfectionRecovery)
+	# same location
+	if (a.position == b.position)
+		# Transmits from a=>b ?
+		if (a.status == I && b.status == S &&
+			rand() < infection.p_infection)
+			b.status = I
+		end
+		
+		# Transmits from b=>a ?
+		if (b.status == I && a.status == S &&
+			rand() < infection.p_infection)
+			a.status = I
+		end
+	end
+
+	if (a.position == b.position && # same location
+		a.status == I && b.status == S && # possible to transmit
+		rand() < infection.p_infection)
+		b.status = S
+	end
+	
+	if a.status == I && rand() < infection.p_recovery
+		a.status = R
+	end
+end
 
 # ╔═╡ 34778744-0a5f-11eb-22b6-abe8b8fc34fd
 md"""
@@ -503,12 +527,6 @@ Your turn!
 
 - return the array `agents` again.
 """
-
-# ╔═╡ 24fe0f1a-0a69-11eb-29fe-5fb6cbf281b8
-# function step!(agents::Vector, L::Number, infection::AbstractInfection)
-	
-# 	return missing
-# end
 
 # ╔═╡ 1fc3271e-0a45-11eb-0e8d-0fd355f5846b
 md"""
@@ -530,19 +548,48 @@ plot(plot_before, plot_after)
 # ╔═╡ 18552c36-0a4d-11eb-19a0-d7d26897af36
 pandemic = CollisionInfectionRecovery(0.5, 0.00001)
 
+# ╔═╡ 24fe0f1a-0a69-11eb-29fe-5fb6cbf281b8
+function step!(agents::Vector, L::Number, infection::AbstractInfection)
+	source = rand(agents)
+	
+	move = rand(possible_moves)
+	source.position = collide_boundary(source.position + move, L)
+	
+	for a in agents
+		if a != source
+			interact!(a, source, pandemic)
+		end
+	end
+
+	return agents
+end
+
 # ╔═╡ 4e7fd58a-0a62-11eb-1596-c717e0845bd5
-@bind k_sweeps Slider(1:10000, default=1000)
+@bind k_sweeps Slider(1:10000, default=1000, show_value=true)
+
+# ╔═╡ e585b818-734f-11eb-0d45-fd50c6746b5a
+function sweep!(agents::Vector, L, infection)
+	for _ in 1:length(agents)
+		agents = step!(agents, L, infection)
+	end
+	agents
+end
 
 # ╔═╡ 778c2490-0a62-11eb-2a6c-e7fab01c6822
-# let
-# 	N = 50
-# 	L = 40
+let
+	N = 50
+	L = 40
 	
-# 	plot_before = plot(1:3) # replace with your code
-# 	plot_after = plot(1:3)
+	agents = initialize(N, L)
+	plot_before = visualize(agents, L)
 	
-# 	plot(plot_before, plot_after)
-# end
+	for _ in 1:k_sweeps
+		agents = sweep!(agents, L, pandemic)
+	end
+	plot_after = visualize(agents, L)
+	
+	plot(plot_before, plot_after)
+end
 
 # ╔═╡ e964c7f0-0a61-11eb-1782-0b728fab1db0
 md"""
@@ -561,8 +608,23 @@ let
 	N = 50
 	L = 30
 	
-	# agents = initialize(N, L)
-	# compute k_sweep_max number of sweeps and plot the SIR
+	agents = initialize(N, L)	
+	totals = []
+	for _ in 1:k_sweep_max
+		agents = sweep!(agents, L, pandemic)
+		
+		t = (
+			S = count(a -> a.status == S, agents),
+			I = count(a -> a.status == I, agents),
+			R = count(a -> a.status == R, agents),
+		)
+		push!(totals, t)  
+	end
+	
+	p = plot()
+	plot!(p, map(c -> c.S, totals), label="S")
+	plot!(p, map(c -> c.I, totals), label="I")
+	plot!(p, map(c -> c.R, totals), label="R")
 end
 
 # ╔═╡ 201a3810-0a45-11eb-0ac9-a90419d0b723
@@ -1047,11 +1109,12 @@ bigbreak
 # ╠═de88b530-0a4b-11eb-05f7-85171594a8e8
 # ╟─80f39140-0aef-11eb-21f7-b788c5eab5c9
 # ╠═d1bcd5c4-0a4b-11eb-1218-7531e367a7ff
-# ╟─34778744-0a5f-11eb-22b6-abe8b8fc34fd
+# ╠═34778744-0a5f-11eb-22b6-abe8b8fc34fd
 # ╠═24fe0f1a-0a69-11eb-29fe-5fb6cbf281b8
 # ╟─1fc3271e-0a45-11eb-0e8d-0fd355f5846b
 # ╟─18552c36-0a4d-11eb-19a0-d7d26897af36
 # ╠═4e7fd58a-0a62-11eb-1596-c717e0845bd5
+# ╠═e585b818-734f-11eb-0d45-fd50c6746b5a
 # ╠═778c2490-0a62-11eb-2a6c-e7fab01c6822
 # ╟─e964c7f0-0a61-11eb-1782-0b728fab1db0
 # ╠═4d83dbd0-0a63-11eb-0bdc-757f0e721221
