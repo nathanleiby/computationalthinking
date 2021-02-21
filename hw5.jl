@@ -952,8 +952,57 @@ md"""
 👉 Run a simulation for 100 steps, and then apply a "lockdown" where every agent's social score gets multiplied by 0.25, and then run a second simulation which runs on that same population from there.  What do you notice?  How does changing this factor form 0.25 to other numbers affect things?
 """
 
+# ╔═╡ 2607684a-73dd-11eb-37a4-6da4c6d8a6c9
+md"""A lockdown factor of `0.25` completely stops the pandemic from spreading. 
+
+Another thing I notice is that the infected persion is infectious through the whole run of 200 sweeps (`1000 steps = 200 sweeps * 50 steps/sweep`). This seems reasonable now, given that the recovery chance is `1 / 10000` per step.
+
+
+Even a much higher lockdown factor of `0.9` seems to substantially slow the spread of the disease. My guess is that the most social actors are getting infected and the others aren't getting hit. It's still very surprising that such a small change impacts the slope so much.
+""" 
+
 # ╔═╡ a83c96e2-0a5a-11eb-0e58-15b5dda7d2d2
-# TODO
+let
+	N = 50
+	L = 40
+	infection = pandemic
+
+	global social_agents2 = initialize_social(N, L)
+	Ss, Is, Rs = [], [], []
+	
+	Tmax = 200
+	
+	lockdown_after = 2 	# 50 steps per 1 sweep
+	lockdown_mult = 0.9 # minimal lockdown benefit
+	
+	@gif for t in 1:Tmax
+		# 1. Step! a lot
+		for i in 1:50
+			sweep!(social_agents2, L, infection)
+			if i == lockdown_after
+				for a in social_agents2
+					a.social_score *= lockdown_mult
+				end
+			end
+		end
+		
+		# 2. Count S, I and R, push them to Ss Is Rs
+		Ss = push!(Ss, count(a -> a.status == S, social_agents2))
+		Is = push!(Is, count(a -> a.status == I, social_agents2))
+		Rs = push!(Rs, count(a -> a.status == R, social_agents2))
+		
+		# 3. call visualize on the agents,
+		left= visualize(social_agents2, L)
+		
+		# 4. place the SIR plot next to visualize.
+		right = plot(;xlim=(0,Tmax), ylim=(0,N))
+		plot!(right, Ss, label="S", color="blue")
+		plot!(right, Is, label="I", color="red")
+		plot!(right, Rs, label="R", color="green")
+		
+		plot(left, right, size=(600,300)) # final plot
+	end
+end
 
 # ╔═╡ 05fc5634-09a0-11eb-038e-53d63c3edaf2
 md"""
@@ -1320,9 +1369,10 @@ bigbreak
 # ╟─b59de26c-0a41-11eb-2c67-b5f3c7780c91
 # ╠═faec52a8-0a60-11eb-082a-f5787b09d88c
 # ╟─b5b4d834-0a41-11eb-1b18-1bd626d18934
+# ╟─2607684a-73dd-11eb-37a4-6da4c6d8a6c9
 # ╠═a83c96e2-0a5a-11eb-0e58-15b5dda7d2d2
 # ╟─05fc5634-09a0-11eb-038e-53d63c3edaf2
-# ╠═24c2fb0c-0a42-11eb-1a1a-f1246f3420ff
+# ╟─24c2fb0c-0a42-11eb-1a1a-f1246f3420ff
 # ╟─c7649966-0a41-11eb-3a3a-57363cea7b06
 # ╠═2635b574-0a42-11eb-1daa-971b2596ce44
 # ╟─c77b085e-0a41-11eb-2fcb-534238cd3c49
