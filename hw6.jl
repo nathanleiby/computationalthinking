@@ -141,8 +141,7 @@ md"""
 
 # ╔═╡ d217a4b6-12e8-11eb-29ce-53ae143a39cd
 function finite_difference_slope(f::Function, a, h=1e-3)
-	
-	return missing
+	return (f(a+h) - f(a)) / h
 end
 
 # ╔═╡ f0576e48-1261-11eb-0579-0b1372565ca7
@@ -150,13 +149,17 @@ finite_difference_slope(sqrt, 4.0, 5.0)
 
 # ╔═╡ bf8a4556-112b-11eb-042e-d705a2ca922a
 md"""
-👉 Write a function `tangent_line` that takes the same arguments `f`, `a` and `g`, but it **returns a function**. This function (``\mathbb{R} \rightarrow \mathbb{R}``) is the _tangent line_ with slope ``f'(a)`` (computed using `finite_difference_slope`) that passes through ``(a, f(a))``.
+👉 Write a function `tangent_line` that takes the same arguments `f`, `a` and `h`, but it **returns a function**. This function (``\mathbb{R} \rightarrow \mathbb{R}``) is the _tangent line_ with slope ``f'(a)`` (computed using `finite_difference_slope`) that passes through ``(a, f(a))``.
 """
 
 # ╔═╡ cbf0a27a-12e8-11eb-379d-85550b942ceb
 function tangent_line(f, a, h)
+	# y = mx + b
+	m = finite_difference_slope(f, a, h)
+	b = f(a) - m * a
 	
-	return missing
+	y(x) = m * x + b
+	return y 
 end
 
 # ╔═╡ 2b79b698-10b9-11eb-3bde-53fc1c48d5f7
@@ -181,6 +184,26 @@ zeroten = LinRange(0.0, 10.0, 300);
 
 # ╔═╡ abc54b82-10b9-11eb-1641-817e2f043d26
 @bind a_finite_diff Slider(zeroten, default=4)
+
+# ╔═╡ 2bc9e136-799b-11eb-0755-e118a5ca4aee
+md"""
+**What happens if you make $h$ too small?**
+
+If you make $h$ too small, then the tangent slope begins to get steeper, approaching $-\infty$.
+
+_Why does this occur?_ 
+
+
+(TODO: Discuss. I'm not sure!)
+
+Recall that our approximation for the derivative is:
+
+$$\frac{h}{\Delta y}$$
+
+Where step size is $h$ and change in the function's value is $\Delta y$.
+
+As $h \to 0$, $\Delta y \to 0$. Because we are computing using small floating point values, at some point those aren't able to handle the math of very small numbers well. At this point, $\Delta y$ being close to 0 overwhelms the numerator. When we divide by (almost) zero, the value approaches $\pm \infty$.  
+"""
 
 # ╔═╡ 43df67bc-10bb-11eb-1cbd-cd962a01e3ee
 md"""
@@ -219,8 +242,9 @@ Using this formula, we only need to know the _value_ ``f(a)`` and the _slope_ ``
 # ╔═╡ fa320028-12c4-11eb-0156-773e2aba8e58
 function euler_integrate_step(fprime::Function, fa::Number, 
 		a::Number, h::Number)
-	
-	return missing
+	 
+	# return h * fprime(a) + fa
+	return h * fprime(a+h) + fa # TODO: why a + h
 end
 
 # ╔═╡ 2335cae6-112f-11eb-3c2c-254e82014567
@@ -235,7 +259,13 @@ function euler_integrate(fprime::Function, fa::Number,
 	a0 = T[1]
 	h = step(T)
 	
-	return missing
+	out = []
+	for a in T
+		fa = euler_integrate_step(fprime, fa, a, h)
+		push!(out, fa)
+	end
+		
+	return out
 end
 
 # ╔═╡ 4d0efa66-12c6-11eb-2027-53d34c68d5b0
@@ -1269,6 +1299,7 @@ end
 # ╟─c9535ad6-10b9-11eb-0537-45f13931cd71
 # ╟─7495af52-10ba-11eb-245f-a98781ba123c
 # ╟─327de976-10b9-11eb-1916-69ad75fc8dc4
+# ╟─2bc9e136-799b-11eb-0755-e118a5ca4aee
 # ╟─43df67bc-10bb-11eb-1cbd-cd962a01e3ee
 # ╠═d5a8bd48-10bf-11eb-2291-fdaaff56e4e6
 # ╟─0b4e8cdc-10bd-11eb-296c-d51dc242a372
