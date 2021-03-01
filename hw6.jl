@@ -440,12 +440,11 @@ md"β / γ = $(β_slider / γ_slider)"
 # ╔═╡ 68274534-1103-11eb-0d62-f1acb57721bc
 let
 	sir_T_slider = 0 : 0.1 : 60.0
-
+	
 	sir_results_slider = euler_SIR(β_slider, γ_slider,
 	[0.99, 0.01, 0.00],
 	sir_T)
 	plot_sir!(plot(), sir_T_slider, sir_results_slider)
-	// hi
 end
 
 # ╔═╡ 82539bbe-106e-11eb-0e9e-170dfa6a7dad
