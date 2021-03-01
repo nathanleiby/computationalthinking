@@ -1,4 +1,7 @@
 # Discussion items:
+- HW6
+  - stopping condition?
+  - 3d viz wasn't working for me .. installed `PlotlyBase` based on error messages. Then also `sudo pacman -S pdf2svg`. fixed!
 - L12
   - This math and the derivations were most challenging for me, as I haven't done calculus in a long time and never studied differential equations
 - L11
