@@ -354,7 +354,7 @@ function euler_SIR(β, γ, sir_0::Vector, T::AbstractRange)
 	h = step(T)
 
 	num_steps = length(T)
-
+	
 	out = []
 	sir = sir_0
 	for t in T
@@ -412,7 +412,7 @@ md"""
 # ╔═╡ 30bf55a2-7a54-11eb-3165-ad6cea833cca
 md"Increasing β or decreasing γ pushes us closer to a pandemic.
 
-A pandemic (defined by a steep spike in infection and >75% of people being infected over time), occurs when
+A pandemic (defined by a steep spike in infection and >75% of people being infected over time), occurs when 
 
 $$\beta / \gamma > 2$$
 
@@ -420,7 +420,7 @@ Nearly 100% population gets infected when
 
 $$\beta / \gamma > 5$$
 
-"
+"  
 
 # ╔═╡ 66daa432-7a53-11eb-2111-e3c1c1a09381
 md"Slider for β:"
@@ -468,8 +468,9 @@ You should use **anonymous functions** for this. These have the form `x -> x^2`,
 
 # ╔═╡ bd8522c6-12e8-11eb-306c-c764f78486ef
 function ∂x(f::Function, a, b)
-
-	return missing
+	g(x) = f(x, b)
+	# alternately: g = x -> f(x, b)
+	return finite_difference_slope(g, a)
 end
 
 # ╔═╡ 321964ac-126d-11eb-0a04-0d3e3fb9b17c
@@ -480,8 +481,8 @@ end
 
 # ╔═╡ b7d3aa8c-12e8-11eb-3430-ff5d7df6a122
 function ∂y(f::Function, a, b)
-
-	return missing
+	h(y) = f(a, y)
+	return finite_difference_slope(h, b)
 end
 
 # ╔═╡ a15509ee-126c-11eb-1fa3-cdda55a47fcb
@@ -498,8 +499,10 @@ md"""
 
 # ╔═╡ adbf65fe-12e8-11eb-04e9-3d763ba91a63
 function gradient(f::Function, a, b)
-
-	return missing
+	return [
+		∂x(f,a,b), 
+		∂y(f,a,b)
+	]
 end
 
 # ╔═╡ 66b8e15e-126c-11eb-095e-39c2f6abc81d
@@ -1370,12 +1373,12 @@ end
 # ╟─586d0352-1245-11eb-2504-05d0aa2352c6
 # ╟─589b2b4c-1245-11eb-1ec7-693c6bda97c4
 # ╟─58b45a0e-1245-11eb-04d1-23a1f3a0f242
-# ╠═30bf55a2-7a54-11eb-3165-ad6cea833cca
+# ╟─30bf55a2-7a54-11eb-3165-ad6cea833cca
 # ╟─66daa432-7a53-11eb-2111-e3c1c1a09381
 # ╟─4b571f92-7a53-11eb-30f6-4d4411cb519d
 # ╟─b6101a5a-7a53-11eb-263a-212cc4059bc2
 # ╟─a48de870-7a53-11eb-3de2-a58c7687e89e
-# ╠═c5ae64ee-7a53-11eb-263c-ad0649534dd6
+# ╟─c5ae64ee-7a53-11eb-263c-ad0649534dd6
 # ╠═68274534-1103-11eb-0d62-f1acb57721bc
 # ╟─82539bbe-106e-11eb-0e9e-170dfa6a7dad
 # ╟─b394b44e-1245-11eb-2f86-8d10113e8cfc
