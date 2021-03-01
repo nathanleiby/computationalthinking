@@ -102,6 +102,9 @@ Page Rank algo has cool connection to eigenvectors and eigenvalues!
 But those are somewhat out of scope for this class. So let's try a different intuition.
 
 TODO: Review eigenvectors and eigenvalues (e.g. 3b1b video)
+=> work through the problem at 16:40 here: https://www.youtube.com/watch?v=PFDu9oVAE-g
+=> watch all of this! https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab
+
 
 Let's think first about "goods transport" in a network. You can go from an adjacency matrix to a "column stochastic matrix" version where the sum of each column is one (i.e. a probability distribution). This gives you a chance of moving to each neighbor.
 
