@@ -529,8 +529,8 @@ We want to minimize a 1D function, i.e. a function $f: \mathbb{R} \to \mathbb{R}
 
 # ╔═╡ a7f1829c-12e8-11eb-15a1-5de40ed92587
 function gradient_descent_1d_step(f, x0; η=0.01)
-
-	return missing
+	m = finite_difference_slope(f, x0)	
+	return x0 - sign(m) * η
 end
 
 # ╔═╡ d33271a2-12df-11eb-172a-bd5600265f49
@@ -554,8 +554,11 @@ md"""
 
 # ╔═╡ 9489009a-12e8-11eb-2fb7-97ba0bdf339c
 function gradient_descent_1d(f, x0; η=0.01, N_steps=1000)
-
-	return missing
+	x = x0
+	for _ in 1:N_steps
+		x = gradient_descent_1d_step(f, x; η=η)
+	end
+	return x
 end
 
 # ╔═╡ 34dc4b02-1248-11eb-26b2-5d2610cfeb41
@@ -572,7 +575,22 @@ Right now we take a fixed number of steps, even if the minimum is found quickly.
 
 # ╔═╡ ebca11d8-12c9-11eb-3dde-c546eccf40fc
 better_stopping_idea = md"""
-blabla
+From calculus we know that a slope of zero indicates a maximum or minimum point. Thus, we can stop if we see a slope of zero. 
+
+However, because are taking steps with a given step size, it's likely that the slope will be approximately but not exactly zero. 
+
+Possible stopping conditions:
+- (slope threshold) In `gradient_descent_1d_step`, if `m < ϵ`, stop.
+- (step size threshold) In `gradient_descent_1d`, stop if output of `gradient_descent_1d_step < ϵ` 
+
+ϵ is a threshold, and could be an absolute threshold (e.g. ϵ = 0.001) or a relative threshold (e.g. ϵ = 0.1 of the previous value)
+
+----
+
+Questions:
+- is there a simpler condition?
+- will this algo cross the minimum and then bounce back and forth? does this stopping condition handle that case?
+- how to set a good absolute or relative threshold?
 """
 
 # ╔═╡ 9fd2956a-1248-11eb-266d-f558cda55702
@@ -585,14 +603,22 @@ Multivariable calculus tells us that the gradient $\nabla f(a, b)$ at a point $(
 
 # ╔═╡ 852be3c4-12e8-11eb-1bbb-5fbc0da74567
 function gradient_descent_2d_step(f, x0, y0; η=0.01)
-
-	return missing
+	∇f = gradient(f, x0, y0) 	
+	x = x0 - ∇f[1] * η	
+	y = y0 - ∇f[2] * η	
+	return [x, y]
 end
 
 # ╔═╡ 8a114ca8-12e8-11eb-2de6-9149d1d3bc3d
 function gradient_descent_2d(f, x0, y0; η=0.01)
-
-	return missing
+	v = [x0, y0]
+	
+	N_steps = 1000	
+	for _ in 1:N_steps
+		v = gradient_descent_2d_step(f, v[1], v[2]; η=η)	
+	end
+	
+	return v
 end
 
 # ╔═╡ 4454c2b2-12e3-11eb-012c-c362c4676bf6
@@ -616,15 +642,21 @@ We also prepared a 3D visualisation if you like! It's a bit slow...
 """
 
 # ╔═╡ 605aafa4-12e7-11eb-2d13-7f7db3fac439
-run_3d_visualisation = false
+run_3d_visualisation = true
+# TODO: didn't work for me :(
 
 # ╔═╡ a03890d6-1248-11eb-37ee-85b0a5273e0c
 md"""
 👉 Can you find different minima?
 """
 
-# ╔═╡ 6d1ee93e-1103-11eb-140f-63fca63f8b06
+# ╔═╡ 8d6e8ae4-7a5f-11eb-11cb-a161826f6d65
 
+different_minima =[
+	gradient_descent_2d(himmelbau, 0, 0),
+	gradient_descent_2d(himmelbau, -3, 4),
+	gradient_descent_2d(himmelbau, -3, -3),	
+]
 
 # ╔═╡ 8261eb92-106e-11eb-2ccc-1348f232f5c3
 md"""
@@ -1291,6 +1323,7 @@ end
 
 # ╔═╡ fbb4a9a4-1248-11eb-00e2-fd346f0056db
 gradient_2d_viz_2d(N_gradient_2d, x0_gradient_2d, y0_gradient_2d)
+# NOTE: this is actually visualizing the logic from gradient_descent_2d_step, not gradient_descent_2d
 
 # ╔═╡ 496b8816-12d3-11eb-3cec-c777ba81eb60
 let
@@ -1405,13 +1438,13 @@ end
 # ╠═34dc4b02-1248-11eb-26b2-5d2610cfeb41
 # ╟─f46aeaf0-1246-11eb-17aa-2580fdbcfa5a
 # ╟─e3120c18-1246-11eb-3bf4-7f4ac45856e0
-# ╠═ebca11d8-12c9-11eb-3dde-c546eccf40fc
+# ╟─ebca11d8-12c9-11eb-3dde-c546eccf40fc
 # ╟─9fd2956a-1248-11eb-266d-f558cda55702
 # ╠═852be3c4-12e8-11eb-1bbb-5fbc0da74567
 # ╠═8a114ca8-12e8-11eb-2de6-9149d1d3bc3d
 # ╠═92854562-1249-11eb-0b81-156982df1284
 # ╠═4454c2b2-12e3-11eb-012c-c362c4676bf6
-# ╟─fbb4a9a4-1248-11eb-00e2-fd346f0056db
+# ╠═fbb4a9a4-1248-11eb-00e2-fd346f0056db
 # ╟─4aace1a8-12e3-11eb-3e07-b5827a2a6765
 # ╟─54a58f84-12e3-11eb-10b9-7d55a16c81ba
 # ╠═a0045046-1248-11eb-13bd-8b8ad861b29a
@@ -1420,8 +1453,8 @@ end
 # ╟─9ae4ebac-12e3-11eb-0acc-23113f5264a9
 # ╟─5e0f16b4-12e3-11eb-212f-e565f97adfed
 # ╟─b6ae4d7e-12e6-11eb-1f92-c95c040d4401
-# ╟─a03890d6-1248-11eb-37ee-85b0a5273e0c
-# ╠═6d1ee93e-1103-11eb-140f-63fca63f8b06
+# ╠═a03890d6-1248-11eb-37ee-85b0a5273e0c
+# ╠═8d6e8ae4-7a5f-11eb-11cb-a161826f6d65
 # ╟─8261eb92-106e-11eb-2ccc-1348f232f5c3
 # ╠═65e691e4-124a-11eb-38b1-b1732403aa3d
 # ╟─6f4aa432-1103-11eb-13da-fdd9eefc7c86
@@ -1470,5 +1503,5 @@ end
 # ╟─b98238ce-106d-11eb-1e39-f9eda5df76af
 # ╟─b989e544-106d-11eb-3c53-3906c5c922fb
 # ╟─05bfc716-106a-11eb-36cb-e7c488050d54
-# ╟─df42aa9e-10c9-11eb-2c19-2d7ce40a1c6c
+# ╠═df42aa9e-10c9-11eb-2c19-2d7ce40a1c6c
 # ╟─15b60272-10ca-11eb-0a28-599ed78cf98a
