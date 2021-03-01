@@ -18,7 +18,7 @@ begin
 	using Pkg
 	Pkg.activate(mktempdir())
 	Pkg.add([
-			Pkg.PackageSpec(name="PlutoUI", version="0.6.7-0.6"), 
+			Pkg.PackageSpec(name="PlutoUI", version="0.6.7-0.6"),
 			Pkg.PackageSpec(name="Plots", version="1.6-1"),
 			])
 
@@ -52,7 +52,7 @@ const numbers = version_str.split(".").map(Number)
 console.log(numbers)
 
 if(numbers[0] > 0 || numbers[1] > 12 || numbers[2] > 1) {
-	
+
 } else {
 	return warning
 }
@@ -79,7 +79,7 @@ Feel free to ask questions!
 
 student = (name = "Jazzy Doe", kerberos_id = "jazz")
 
-# you might need to wait until all other cells in this notebook have completed running. 
+# you might need to wait until all other cells in this notebook have completed running.
 # scroll around the page to see what's up
 
 # ╔═╡ 0565af4c-106a-11eb-0d38-2fb84493d86f
@@ -93,21 +93,21 @@ md"_Let's create a package environment:_"
 
 # ╔═╡ 0d191540-106e-11eb-1f20-bf72a75fb650
 md"""
-We began this module with **data** on the COVID-19 epidemic, but then looked at mathematical **models**. 
+We began this module with **data** on the COVID-19 epidemic, but then looked at mathematical **models**.
 How can we make the connection between data and models?
 
-Models have *parameters*, such as the rate of recovery from infection. 
-Where do the parameter values come from? Ideally we would like to extract them from data. 
+Models have *parameters*, such as the rate of recovery from infection.
+Where do the parameter values come from? Ideally we would like to extract them from data.
 The goal of this homework is to do this by *fitting* a model to data.
 
-For simplicity we will use data that generated from the spatial model in Homework 5, rather than real-world data, 
+For simplicity we will use data that generated from the spatial model in Homework 5, rather than real-world data,
 and we will fit the simplest SIR model. But the same ideas apply more generally.
 
-There are many ways to fit a function to data, but all must involve some form of **optimization**, 
+There are many ways to fit a function to data, but all must involve some form of **optimization**,
 usually **minimization** of a particular function, a **loss function**; this is the basis of the vast field of **machine learning**.
 
 The loss function is a function of the model parameters; it measures *how far* the model *output* is from the data,
-for the given values of the parameters. 
+for the given values of the parameters.
 
 We emphasise that this material is pedagogical; there is no suggestion that these specific techniques should be used actual calculations; rather, it is the underlying ideas that are important.
 """
@@ -157,9 +157,9 @@ function tangent_line(f, a, h)
 	# y = mx + b
 	m = finite_difference_slope(f, a, h)
 	b = f(a) - m * a
-	
+
 	y(x) = m * x + b
-	return y 
+	return y
 end
 
 # ╔═╡ 2b79b698-10b9-11eb-3bde-53fc1c48d5f7
@@ -168,7 +168,7 @@ wavy(x) = .1x^3 - 1.6x^2 + 7x - 3;
 
 # ╔═╡ a732bbcc-112c-11eb-1d65-110c049e226c
 md"""
-The slider below controls ``h`` using a _log scale_. In the (mathematical) definition of the derivative, we take ``\lim_{h \rightarrow 0}``. This corresponds to moving the slider to the left. 
+The slider below controls ``h`` using a _log scale_. In the (mathematical) definition of the derivative, we take ``\lim_{h \rightarrow 0}``. This corresponds to moving the slider to the left.
 
 Notice that, as you decrease ``h``, the tangent line gets more accurate, but what happens if you make ``h`` too small?
 """
@@ -191,7 +191,7 @@ md"""
 
 If you make $h$ too small, then the tangent slope begins to get steeper, approaching $-\infty$.
 
-_Why does this occur?_ 
+_Why does this occur?_
 
 
 (TODO: Discuss. I'm not sure!)
@@ -202,7 +202,7 @@ $$\frac{h}{\Delta y}$$
 
 Where step size is $h$ and change in the function's value is $\Delta y$.
 
-As $h \to 0$, $\Delta y \to 0$. Because we are computing using small floating point values, at some point those aren't able to handle the math of very small numbers well. At this point, $\Delta y$ being close to 0 overwhelms the numerator. When we divide by (almost) zero, the value approaches $\pm \infty$.  
+As $h \to 0$, $\Delta y \to 0$. Because we are computing using small floating point values, at some point those aren't able to handle the math of very small numbers well. At this point, $\Delta y$ being close to 0 overwhelms the numerator. When we divide by (almost) zero, the value approaches $\pm \infty$.
 """
 
 # ╔═╡ 43df67bc-10bb-11eb-1cbd-cd962a01e3ee
@@ -240,9 +240,9 @@ Using this formula, we only need to know the _value_ ``f(a)`` and the _slope_ ``
 """
 
 # ╔═╡ fa320028-12c4-11eb-0156-773e2aba8e58
-function euler_integrate_step(fprime::Function, fa::Number, 
+function euler_integrate_step(fprime::Function, fa::Number,
 		a::Number, h::Number)
-	 
+
 	# return h * fprime(a) + fa
 	return h * fprime(a+h) + fa # TODO: why a + h
 end
@@ -253,18 +253,18 @@ md"""
 """
 
 # ╔═╡ fff7754c-12c4-11eb-2521-052af1946b66
-function euler_integrate(fprime::Function, fa::Number, 
+function euler_integrate(fprime::Function, fa::Number,
 		T::AbstractRange)
-	
+
 	a0 = T[1]
 	h = step(T)
-	
+
 	out = []
 	for a in T
 		fa = euler_integrate_step(fprime, fa, a, h)
 		push!(out, fa)
 	end
-		
+
 	return out
 end
 
@@ -279,7 +279,7 @@ We already know the analytical solution ``f(x) = x^3``, so the result should be 
 euler_test = let
 	fprime(x) = 3x^2
 	T = 0 : 0.1 : 10
-	
+
 	euler_integrate(fprime, 0, T)
 end
 
@@ -305,7 +305,7 @@ $$\begin{align*}
 \dot{r} &= +\gamma i
 \end{align*}$$
 
-where ``\dot{s} := \frac{ds}{dt}`` is the derivative of $s$ with respect to time. 
+where ``\dot{s} := \frac{ds}{dt}`` is the derivative of $s$ with respect to time.
 Recall that $s$ denotes the *proportion* (fraction) of the population that is susceptible, a number between $0$ and $1$.
 
 We will use the simplest possible method to simulate these, namely the **Euler method**. The Euler method is not always a good method to solve ODEs accurately, but for our purposes it is good enough.
@@ -328,17 +328,17 @@ r(t+h) &= r(t) + h\,\cdot \gamma i(t)
 # ╔═╡ 1e5ca54e-12d8-11eb-18b8-39b909584c72
 function euler_SIR_step(β, γ, sir_0::Vector, h::Number)
 	s, i, r = sir_0
-	
+
 	return [
-		missing,
-		missing,
-		missing,
+		s - h * β * s * i,
+		i + h * (β * s * i - γ * i),
+		r + h * γ * i,
 	]
 end
 
 # ╔═╡ 84daf7c4-1244-11eb-0382-d1da633a63e2
-euler_SIR_step(0.1, 0.05, 
-	[0.99, 0.01, 0.00], 
+euler_SIR_step(0.1, 0.05,
+	[0.99, 0.01, 0.00],
 	0.1)
 
 # ╔═╡ 517efa24-1244-11eb-1f81-b7f95b87ce3b
@@ -352,18 +352,25 @@ You should return a vector of vectors: a 3-element vector for each point in time
 function euler_SIR(β, γ, sir_0::Vector, T::AbstractRange)
 	# T is a range, you get the step size and number of steps like so:
 	h = step(T)
-	
+
 	num_steps = length(T)
-	
-	return missing
+
+	out = []
+	sir = sir_0
+	for t in T
+		sir = euler_SIR_step(β, γ, sir, h)
+		push!(out, sir)
+	end
+
+	return out
 end
 
 # ╔═╡ 4b791b76-12cd-11eb-1260-039c938f5443
 sir_T = 0 : 0.1 : 60.0
 
 # ╔═╡ 0a095a94-1245-11eb-001a-b908128532aa
-sir_results = euler_SIR(0.3, 0.15, 
-	[0.99, 0.01, 0.00], 
+sir_results = euler_SIR(0.3, 0.15,
+	[0.99, 0.01, 0.00],
 	sir_T)
 
 # ╔═╡ 51c9a25e-1244-11eb-014f-0bcce2273cee
@@ -376,11 +383,11 @@ function plot_sir!(p, T, results; label="", kwargs...)
 	s = getindex.(results, [1])
 	i = getindex.(results, [2])
 	r = getindex.(results, [3])
-	
+
 	plot!(p, T, s; color=1, label=label*" S", lw=3, kwargs...)
 	plot!(p, T, i; color=2, label=label*" I", lw=3, kwargs...)
 	plot!(p, T, r; color=3, label=label*" R", lw=3, kwargs...)
-	
+
 	p
 end
 
@@ -394,7 +401,7 @@ md"""
 
 # ╔═╡ 589b2b4c-1245-11eb-1ec7-693c6bda97c4
 default_SIR_parameters_observation = md"""
-blabla
+There's a rapid growth in infected individuals from time 10 to 30; however, not everyone gets infected. At time 60, about 75% of the population has been infected and recovered.
 """
 
 # ╔═╡ 58b45a0e-1245-11eb-04d1-23a1f3a0f242
@@ -402,8 +409,44 @@ md"""
 👉 Make an interactive visualization in which you vary $\beta$ and $\gamma$. What relation should $\beta$ and $\gamma$ have for an epidemic outbreak to occur?
 """
 
-# ╔═╡ 68274534-1103-11eb-0d62-f1acb57721bc
+# ╔═╡ 30bf55a2-7a54-11eb-3165-ad6cea833cca
+md"Increasing β or decreasing γ pushes us closer to a pandemic.
 
+A pandemic (defined by a steep spike in infection and >75% of people being infected over time), occurs when
+
+$$\beta / \gamma > 2$$
+
+Nearly 100% population gets infected when
+
+$$\beta / \gamma > 5$$
+
+"
+
+# ╔═╡ 66daa432-7a53-11eb-2111-e3c1c1a09381
+md"Slider for β:"
+
+# ╔═╡ 4b571f92-7a53-11eb-30f6-4d4411cb519d
+@bind β_slider Slider(0:0.01:2, default=0.3, show_value=true, )
+
+# ╔═╡ b6101a5a-7a53-11eb-263a-212cc4059bc2
+md"Slider for γ:"
+
+# ╔═╡ a48de870-7a53-11eb-3de2-a58c7687e89e
+@bind γ_slider Slider(0:0.01:2, default=0.15, show_value=true, )
+
+# ╔═╡ c5ae64ee-7a53-11eb-263c-ad0649534dd6
+md"β / γ = $(β_slider / γ_slider)"
+
+# ╔═╡ 68274534-1103-11eb-0d62-f1acb57721bc
+let
+	sir_T_slider = 0 : 0.1 : 60.0
+
+	sir_results_slider = euler_SIR(β_slider, γ_slider,
+	[0.99, 0.01, 0.00],
+	sir_T)
+	plot_sir!(plot(), sir_T_slider, sir_results_slider)
+	// hi
+end
 
 # ╔═╡ 82539bbe-106e-11eb-0e9e-170dfa6a7dad
 md"""
@@ -426,25 +469,25 @@ You should use **anonymous functions** for this. These have the form `x -> x^2`,
 
 # ╔═╡ bd8522c6-12e8-11eb-306c-c764f78486ef
 function ∂x(f::Function, a, b)
-	
+
 	return missing
 end
 
 # ╔═╡ 321964ac-126d-11eb-0a04-0d3e3fb9b17c
 ∂x(
-	(x, y) -> 7x^2 + y, 
+	(x, y) -> 7x^2 + y,
 	3, 7
 )
 
 # ╔═╡ b7d3aa8c-12e8-11eb-3430-ff5d7df6a122
 function ∂y(f::Function, a, b)
-	
+
 	return missing
 end
 
 # ╔═╡ a15509ee-126c-11eb-1fa3-cdda55a47fcb
 ∂y(
-	(x, y) -> 7x^2 + y, 
+	(x, y) -> 7x^2 + y,
 	3, 7
 )
 
@@ -456,13 +499,13 @@ md"""
 
 # ╔═╡ adbf65fe-12e8-11eb-04e9-3d763ba91a63
 function gradient(f::Function, a, b)
-	
+
 	return missing
 end
 
 # ╔═╡ 66b8e15e-126c-11eb-095e-39c2f6abc81d
 gradient(
-	(x, y) -> 7x^2 + y, 
+	(x, y) -> 7x^2 + y,
 	3, 7
 )
 
@@ -484,7 +527,7 @@ We want to minimize a 1D function, i.e. a function $f: \mathbb{R} \to \mathbb{R}
 
 # ╔═╡ a7f1829c-12e8-11eb-15a1-5de40ed92587
 function gradient_descent_1d_step(f, x0; η=0.01)
-	
+
 	return missing
 end
 
@@ -492,7 +535,7 @@ end
 let
 	f = x -> x^2
 	# the minimum is at 0, so we should take a small step to the left
-	
+
 	gradient_descent_1d_step(f, 5)
 end
 
@@ -509,7 +552,7 @@ md"""
 
 # ╔═╡ 9489009a-12e8-11eb-2fb7-97ba0bdf339c
 function gradient_descent_1d(f, x0; η=0.01, N_steps=1000)
-	
+
 	return missing
 end
 
@@ -540,13 +583,13 @@ Multivariable calculus tells us that the gradient $\nabla f(a, b)$ at a point $(
 
 # ╔═╡ 852be3c4-12e8-11eb-1bbb-5fbc0da74567
 function gradient_descent_2d_step(f, x0, y0; η=0.01)
-	
+
 	return missing
 end
 
 # ╔═╡ 8a114ca8-12e8-11eb-2de6-9149d1d3bc3d
 function gradient_descent_2d(f, x0, y0; η=0.01)
-	
+
 	return missing
 end
 
@@ -600,19 +643,19 @@ import Statistics
 
 # ╔═╡ 6f4aa432-1103-11eb-13da-fdd9eefc7c86
 function dice_frequencies(N_dice, N_experiments)
-	
+
 	experiment() = let
 		sum_of_rolls = sum(rand(1:6, N_dice))
 	end
-	
+
 	results = [experiment() for _ in 1:N_experiments]
-	
+
 	x = N_dice : N_dice*6
-	
+
 	y = map(x) do total
 		sum(isequal(total), results)
 	end ./ N_experiments
-	
+
 	x, y
 end
 
@@ -625,7 +668,7 @@ Let's try to fit a gaussian (normal) distribution. Its PDF with mean $\mu$ and s
 
 $$f_{\mu, \sigma}(x) := \frac{1}{\sigma \sqrt{2 \pi}}\exp \left[- \frac{(x - \mu)^2}{2 \sigma^2} \right]$$
 
-👉 _(Not graded)_ Manually fit a Gaussian distribution to our data by adjusting ``\mu`` and ``\sigma`` until you find a good fit. 
+👉 _(Not graded)_ Manually fit a Gaussian distribution to our data by adjusting ``\mu`` and ``\sigma`` until you find a good fit.
 """
 
 # ╔═╡ 66192a74-124c-11eb-0c6a-d74aecb4c624
@@ -654,7 +697,7 @@ $$\mathcal{L}(\mu, \sigma) := \sum_i [f_{\mu, \sigma}(x_i) - y_i]^2$$
 
 # ╔═╡ 2fc55daa-124f-11eb-399e-659e59148ef5
 function loss_dice(μ, σ)
-	
+
 	return missing
 end
 
@@ -669,9 +712,9 @@ md"""
 
 # ╔═╡ a150fd60-124f-11eb-35d6-85104bcfd0fe
 found_μ, found_σ = let
-	
+
 	# your code here
-	
+
 	missing, missing
 end
 
@@ -712,8 +755,8 @@ md"""
 
 ## **Exercise 6:** _Putting it all together — fitting an SIR model to data_
 
-In this exercise we will fit the (non-spatial) SIR ODE model from Exercise 1 to some data generated from the spatial model in Problem Set 4. 
-If we are able to find a good fit, that would suggest that the spatial aspect "does not matter" too much for the dynamics of these models. 
+In this exercise we will fit the (non-spatial) SIR ODE model from Exercise 1 to some data generated from the spatial model in Problem Set 4.
+If we are able to find a good fit, that would suggest that the spatial aspect "does not matter" too much for the dynamics of these models.
 If the fit is not so good, perhaps there is an important effect of space. (As usual in statistics, and indeed in modelling in general, we should be very cautious of making claims of this nature.)
 
 This fitting procedure will be different from that in Exercise 4, however: we no longer have an explicit form for the function that we are fitting -- rather, it is the output of an ODE! So what should we do?
@@ -759,7 +802,7 @@ This time, instead of comparing two vectors of numbers, we need to compare two v
 
 # ╔═╡ 754b5368-12e8-11eb-0763-e3ec56562c5f
 function loss_sir(β, γ)
-	
+
 	return missing
 end
 
@@ -773,9 +816,9 @@ md"""
 
 # ╔═╡ 6e1b5b6a-12e8-11eb-3655-fb10c4566cdc
 found_β, found_γ = let
-	
+
 	# your code here
-	
+
 	missing, missing
 end
 
@@ -876,7 +919,7 @@ end
 let
 	result1 = gradient_descent_1d_step(x -> x^2, 10; η=1)
 	result2 = gradient_descent_1d_step(x -> x^2, 10; η=2)
-	
+
 	if result1 isa Missing
 		still_missing()
 	elseif !(result1 isa Real)
@@ -895,7 +938,7 @@ let
 	result = gradient_descent_1d(10) do x
 		(x - 5pi) ^ 2 + 10
 	end
-	
+
 	if result isa Missing
 		still_missing()
 	elseif !(result isa Real)
@@ -927,7 +970,7 @@ let
 				almost(md"Try using initial values that are closer to the expected result. (For example, the values that you found using the sliders.)")
 			elseif diffb > .01 || diffc > .001
 				almost(md"Try using initial values that are closer to the expected result. (For example, the values that you found using the sliders.)
-					
+
 You can also experiment with a different loss function. Are you using the absolute error, instead of the square of the error? A parabolic loss function is 'easier to optimize' using gradient descent than a cone-shaped one.")
 			else
 				correct(md"""
@@ -947,7 +990,7 @@ if !@isdefined(finite_difference_slope)
 else
 	let
 		result = finite_difference_slope(sqrt, 4.0, 5.0)
-		
+
 		if result isa Missing
 			still_missing()
 		elseif !(result isa Real)
@@ -968,7 +1011,7 @@ if !@isdefined(tangent_line)
 else
 	let
 		result = tangent_line(sqrt, 4.0, 5.0)
-		
+
 		if result isa Missing
 			still_missing()
 		elseif !(result isa Function)
@@ -993,7 +1036,7 @@ if !@isdefined(∂x)
 else
 	let
 		result = ∂x((x, y) -> 2x^2 + 3y^2, 6, 7)
-		
+
 		if result isa Missing
 			still_missing()
 		elseif !(result isa Number)
@@ -1014,7 +1057,7 @@ if !@isdefined(∂y)
 else
 	let
 		result = ∂y((x, y) -> 2x^2 + 3y^2, 6, 7)
-		
+
 		if result isa Missing
 			still_missing()
 		elseif !(result isa Number)
@@ -1035,7 +1078,7 @@ if !@isdefined(gradient)
 else
 	let
 		result = gradient((x, y) -> 2x^2 + 3y^2, 6, 7)
-		
+
 		if result isa Missing
 			still_missing()
 		elseif !(result isa Vector)
@@ -1095,21 +1138,21 @@ let
 	scatter!(p, [a_finite_diff], [wavy(a_finite_diff)], label="a", color="red")
 	vline!(p, [a_finite_diff], label=nothing, color="red", linestyle=:dash)
 	scatter!(p, [a_finite_diff+h_finite_diff], [wavy(a_finite_diff+h_finite_diff)], label="a + h", color="green")
-	
+
 	try
 		result = tangent_line(wavy, a_finite_diff, h_finite_diff)
-		
+
 		plot!(p, zeroten, result, label="tangent", color="purple")
 	catch
 	end
-	
+
 	plot!(p, xlim=(0,10), ylim=(-2, 8))
 end |> as_svg
 
 # ╔═╡ 70df9a48-10bb-11eb-0b95-95a224b45921
 let
 	slope = wavy_deriv(a_euler)
-	
+
 	p = plot(LinRange(1.0 - 0.1, 1.0 + 0.1, 2), wavy, label=nothing, lw=3)
 	scatter!(p, [1], wavy, label="f(1)", color="blue", lw=3)
 	# p = plot()
@@ -1117,9 +1160,9 @@ let
 	for y in -4:10
 		plot!(p, x, slope .* (x .- a_euler) .+ y, label=nothing, color="purple", opacity=.6)
 	end
-	
+
 	vline!(p, [a_euler], color="red", label="a", linestyle=:dash)
-	
+
 	plot!(p, xlim=(0,10), ylim=(-2, 8))
 end |> as_svg
 
@@ -1128,24 +1171,24 @@ let
 	a = 1
 	h = .3
 	history = euler_integrate(wavy_deriv, wavy(a), range(a; step=h, length=N_euler))
-	
+
 	slope = wavy_deriv(a_euler)
-	
+
 	p = plot(zeroten, wavy, label="exact solution", lw=3, opacity=.1, color="gray")
 	# p = plot()
-	
+
 	last_a = a + (N_euler-1)*h
-	
+
 	vline!(p, [last_a], color="red", label="a", linestyle=:dash)
 
 	try
-		plot!(p, a .+ h .* (1:N_euler), history, 
+		plot!(p, a .+ h .* (1:N_euler), history,
 			color="blue", label=nothing)
-		scatter!(p, a .+ h .* (1:N_euler), history, 
-			color="blue", label="appromixation", 
+		scatter!(p, a .+ h .* (1:N_euler), history,
+			color="blue", label="appromixation",
 			markersize=2, markerstrokewidth=0)
 
-		
+
 		plot!(p, [0,10], ([0,10] .- (last_a+h)) .* wavy_deriv(last_a+h) .+ history[end],
 			label="tangent",
 			color="purple")
@@ -1158,26 +1201,26 @@ end |> as_svg
 # ╔═╡ 90114f98-12e0-11eb-2011-a3207bbc24f6
 function gradient_1d_viz(N_gradient_1d, x0)
 	f = x -> x^4 + 3x^3 - 3x + 5.
-	
+
 	x = LinRange(-3, 1.5, 200)
-	
+
 	history = accumulate(1:N_gradient_1d, init=x0) do old, _
 		gradient_descent_1d_step(f, old, η=.025)
 	end
-	
+
 	all = [x0, history...]
-	
+
 	# slope = wavy_deriv(a_euler)
-	
+
 	p = plot(x, f, label="f(x)", lw=3, opacity=.6, color="gray")
 	# p = plot()
-	
-	plot!(p, all, f, 
+
+	plot!(p, all, f,
 		color="blue", opacity=range(.5,step=.2,length=length(all)), label=nothing)
 	scatter!(p, all, f,
-		color="blue", label="gradient descent", 
+		color="blue", label="gradient descent",
 		markersize=3, markerstrokewidth=0)
-	
+
 	as_svg(p)
 end
 
@@ -1190,19 +1233,19 @@ function gradient_2d_viz_3d(N_gradient_2d, x0, y0)
 	history = accumulate(1:N_gradient_2d, init=[x0, y0]) do old, _
 		gradient_descent_2d_step(himmelbau, old...)
 	end
-	
+
 	all = [[x0, y0], history...]
-	
+
 	p = surface(-4:0.4:5, -4:0.4:4, himmelbau)
-	
+
 	trace = [himmelbau(s...) for s in all]
-	
-	plot!(p, first.(all), last.(all), trace, 
+
+	plot!(p, first.(all), last.(all), trace,
 		color="blue", opacity=range(.5,step=.2,length=length(all)), label=nothing)
-	scatter!(p, first.(all), last.(all), trace, 
-		color="blue", label="gradient descent", 
+	scatter!(p, first.(all), last.(all), trace,
+		color="blue", label="gradient descent",
 		markersize=3, markerstrokewidth=0)
-	
+
 	as_svg(p)
 end
 
@@ -1230,17 +1273,17 @@ function gradient_2d_viz_2d(N_gradient_2d, x0, y0)
 	history = accumulate(1:N_gradient_2d, init=[x0, y0]) do old, _
 		gradient_descent_2d_step(himmelbau, old...)
 	end
-	
+
 	all = [[x0, y0], history...]
-	
+
 	p = heatmap(-4:0.4:5, -4:0.4:4, himmelbau)
-	
-	plot!(p, first.(all), last.(all), 
+
+	plot!(p, first.(all), last.(all),
 		color="blue", opacity=range(.5,step=.2,length=length(all)), label=nothing)
-	scatter!(p, first.(all), last.(all), 
-		color="blue", label="gradient descent", 
+	scatter!(p, first.(all), last.(all),
+		color="blue", label="gradient descent",
 		markersize=3, markerstrokewidth=0)
-	
+
 	as_svg(p)
 end
 
@@ -1251,25 +1294,25 @@ gradient_2d_viz_2d(N_gradient_2d, x0_gradient_2d, y0_gradient_2d)
 let
 	p = plot()
 	plot_sir!(p, hw4_T, hw4_results, label="hw4", opacity=.7)
-	
+
 	if show_manual_sir_fit
-		guess_results = euler_SIR(guess_β, guess_γ, 
-		[0.99, 0.01, 0.00], 
+		guess_results = euler_SIR(guess_β, guess_γ,
+		[0.99, 0.01, 0.00],
 		hw4_T)
-		
+
 		plot_sir!(p, hw4_T, guess_results, label="manual", linestyle=:dash, lw=2)
 	end
-	
+
 	try
 		@assert !(found_β isa Missing) && !(found_γ isa Missing)
-		found_results = euler_SIR(found_β, found_γ, 
-		[0.99, 0.01, 0.00], 
+		found_results = euler_SIR(found_β, found_γ,
+		[0.99, 0.01, 0.00],
 		hw4_T)
-		
+
 		plot_sir!(p, hw4_T, found_results, label="optimized", linestyle=:dot, lw=2)
 	catch
 	end
-	
+
 	as_svg(p)
 end
 
@@ -1323,11 +1366,17 @@ end
 # ╠═4b791b76-12cd-11eb-1260-039c938f5443
 # ╠═0a095a94-1245-11eb-001a-b908128532aa
 # ╟─51c9a25e-1244-11eb-014f-0bcce2273cee
-# ╟─58675b3c-1245-11eb-3548-c9cb8a6b3188
+# ╠═58675b3c-1245-11eb-3548-c9cb8a6b3188
 # ╟─b4bb4b3a-12ce-11eb-3fe5-ad7ccd73febb
 # ╟─586d0352-1245-11eb-2504-05d0aa2352c6
-# ╠═589b2b4c-1245-11eb-1ec7-693c6bda97c4
+# ╟─589b2b4c-1245-11eb-1ec7-693c6bda97c4
 # ╟─58b45a0e-1245-11eb-04d1-23a1f3a0f242
+# ╠═30bf55a2-7a54-11eb-3165-ad6cea833cca
+# ╟─66daa432-7a53-11eb-2111-e3c1c1a09381
+# ╟─4b571f92-7a53-11eb-30f6-4d4411cb519d
+# ╟─b6101a5a-7a53-11eb-263a-212cc4059bc2
+# ╟─a48de870-7a53-11eb-3de2-a58c7687e89e
+# ╠═c5ae64ee-7a53-11eb-263c-ad0649534dd6
 # ╠═68274534-1103-11eb-0d62-f1acb57721bc
 # ╟─82539bbe-106e-11eb-0e9e-170dfa6a7dad
 # ╟─b394b44e-1245-11eb-2f86-8d10113e8cfc
