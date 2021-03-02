@@ -613,7 +613,8 @@ end
 function gradient_descent_2d(f, x0, y0; η=0.01)
 	v = [x0, y0]
 	
-	N_steps = 1000	
+	N_steps = 10_000
+	# TODO: alternate stopping condition?
 	for _ in 1:N_steps
 		v = gradient_descent_2d_step(f, v[1], v[2]; η=η)	
 	end
@@ -643,7 +644,6 @@ We also prepared a 3D visualisation if you like! It's a bit slow...
 
 # ╔═╡ 605aafa4-12e7-11eb-2d13-7f7db3fac439
 run_3d_visualisation = true
-# TODO: didn't work for me :(
 
 # ╔═╡ a03890d6-1248-11eb-37ee-85b0a5273e0c
 md"""
@@ -731,8 +731,15 @@ $$\mathcal{L}(\mu, \sigma) := \sum_i [f_{\mu, \sigma}(x_i) - y_i]^2$$
 
 # ╔═╡ 2fc55daa-124f-11eb-399e-659e59148ef5
 function loss_dice(μ, σ)
+	loss = 0
+	for i in 1:length(dice_x)
+		xᵢ = dice_x[i]
+		yᵢ = dice_y[i]
+		fμσ = gauss(xᵢ, μ, σ)
+		loss += (fμσ - yᵢ)^2
+	end
 
-	return missing
+	return loss
 end
 
 # ╔═╡ 3a6ec2e4-124f-11eb-0f68-791475bab5cd
@@ -746,10 +753,7 @@ md"""
 
 # ╔═╡ a150fd60-124f-11eb-35d6-85104bcfd0fe
 found_μ, found_σ = let
-
-	# your code here
-
-	missing, missing
+	gradient_descent_2d(loss_dice, 30, 1; η=0.5) # take big steps (was η=0.01)
 end
 
 # ╔═╡ ac320522-124b-11eb-1552-51c2adaf2521
@@ -1453,7 +1457,7 @@ end
 # ╟─9ae4ebac-12e3-11eb-0acc-23113f5264a9
 # ╟─5e0f16b4-12e3-11eb-212f-e565f97adfed
 # ╟─b6ae4d7e-12e6-11eb-1f92-c95c040d4401
-# ╠═a03890d6-1248-11eb-37ee-85b0a5273e0c
+# ╟─a03890d6-1248-11eb-37ee-85b0a5273e0c
 # ╠═8d6e8ae4-7a5f-11eb-11cb-a161826f6d65
 # ╟─8261eb92-106e-11eb-2ccc-1348f232f5c3
 # ╠═65e691e4-124a-11eb-38b1-b1732403aa3d
