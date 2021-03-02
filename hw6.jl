@@ -610,10 +610,9 @@ function gradient_descent_2d_step(f, x0, y0; η=0.01)
 end
 
 # ╔═╡ 8a114ca8-12e8-11eb-2de6-9149d1d3bc3d
-function gradient_descent_2d(f, x0, y0; η=0.01)
+function gradient_descent_2d(f, x0, y0; η=0.01, N_steps=1000)
 	v = [x0, y0]
 	
-	N_steps = 10_000
 	# TODO: alternate stopping condition?
 	for _ in 1:N_steps
 		v = gradient_descent_2d_step(f, v[1], v[2]; η=η)	
@@ -753,7 +752,7 @@ md"""
 
 # ╔═╡ a150fd60-124f-11eb-35d6-85104bcfd0fe
 found_μ, found_σ = let
-	gradient_descent_2d(loss_dice, 30, 1; η=0.5) # take big steps (was η=0.01)
+	gradient_descent_2d(loss_dice, 30, 1; η=0.5, N_steps=5000) # take big steps (was η=0.01)
 end
 
 # ╔═╡ ac320522-124b-11eb-1552-51c2adaf2521
@@ -839,9 +838,23 @@ This time, instead of comparing two vectors of numbers, we need to compare two v
 """
 
 # ╔═╡ 754b5368-12e8-11eb-0763-e3ec56562c5f
-function loss_sir(β, γ)
+begin
+	""" Computes the magnitude (length) of a vector """
+	magnitude(V) = return sqrt(sum(map(x -> x^2, V)))
+	
+	function loss_sir(β, γ)
+		sir_ode_model = euler_SIR(β, γ, [.99, .01, 0], hw4_T)
+		sir_spatial_model = hw4_results
 
-	return missing
+		loss = 0
+		for t in hw4_T
+			v = sir_ode_model[t] - sir_spatial_model[t]
+			m = magnitude(v)
+			loss += m
+		end
+
+		return loss
+	end
 end
 
 # ╔═╡ ee20199a-12d4-11eb-1c2c-3f571bbb232e
@@ -852,13 +865,21 @@ md"""
 👉 Use this loss function to find the optimal parameters ``\beta`` and ``\gamma``.
 """
 
+# ╔═╡ 2d3c3566-7b1a-11eb-36f4-0b74d6174fb2
+begin	
+	β₀ = 0.0185
+	γ₀ = 0.0022
+	loss_sir(β₀, γ₀)
+end
+
 # ╔═╡ 6e1b5b6a-12e8-11eb-3655-fb10c4566cdc
 found_β, found_γ = let
-
-	# your code here
-
-	missing, missing
+	η = 1e-8
+	gradient_descent_2d(loss_sir, β₀, γ₀; η=η, N_steps=1000)
 end
+
+# ╔═╡ 227c2ec4-7b1a-11eb-2aec-1d3c506603f9
+loss_sir(found_β, found_γ)
 
 # ╔═╡ b94b7610-106d-11eb-2852-25337ce6ec3a
 if student.name == "Jazzy Doe" || student.kerberos_id == "jazz"
@@ -1493,7 +1514,9 @@ end
 # ╠═754b5368-12e8-11eb-0763-e3ec56562c5f
 # ╠═ee20199a-12d4-11eb-1c2c-3f571bbb232e
 # ╟─38b09bd8-12d5-11eb-2f7b-579e9db3973d
+# ╠═2d3c3566-7b1a-11eb-36f4-0b74d6174fb2
 # ╠═6e1b5b6a-12e8-11eb-3655-fb10c4566cdc
+# ╠═227c2ec4-7b1a-11eb-2aec-1d3c506603f9
 # ╟─106670f2-12d6-11eb-1854-5bf0fc6f4dfb
 # ╟─b94b7610-106d-11eb-2852-25337ce6ec3a
 # ╟─112eb7b2-1428-11eb-1c60-15105fa0e5fa
