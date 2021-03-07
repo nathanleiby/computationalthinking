@@ -594,8 +594,32 @@ With all this said, we are ready to write some code.
 
 # ╔═╡ 392fe192-1ca1-11eb-36c4-f9bd2b01a5e5
 function intersection(photon::Photon, sphere::Sphere; ϵ=1e-3)
+	# intersects?
+	R₀ = photon.p
+	S = sphere.center
+	a = dot(photon.l, photon.l)
+	b = dot(2 * photon.l, (R₀ - S))
+	c = dot((R₀ - S), (R₀ - S)) - sphere.radius ^2
+	discrim = b^2 - 4*a*c
+	if discrim < 0
+		return Miss()
+	end
+
+	t1 = (-b + sqrt(discrim)) / 2a
+	t2 = (-b - sqrt(discrim)) / 2a
 	
-	return missing
+	# filter out negative times
+	options = [t1, t2]
+	filter!(x -> x >= zero(x), options)
+	
+	V = photon.l * min(options...)
+	d = sqrt(sum(transpose(V) * V))
+
+	return Intersection(
+		sphere,
+		d,
+		photon.p + V
+	)		
 end
 
 # ╔═╡ a306e880-19eb-11eb-0ff1-d7ef49777f63
@@ -657,8 +681,23 @@ let
 end
 
 # ╔═╡ af5c6bea-1c9c-11eb-35ae-250337e4fc86
+## hit
+# test_sphere = Sphere(
+# 	[7, -4],
+# 	2,
+# 	1.5,
+# )
+
+## miss
+# test_sphere = Sphere(
+# 	[0, -4],
+# 	2,
+# 	1.5,
+# )
+
+## start inside
 test_sphere = Sphere(
-	[7, -6],
+	[4, 0],
 	2,
 	1.5,
 )
@@ -1141,7 +1180,7 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╟─492b257a-194f-11eb-17fb-f770b4d3da2e
 # ╠═392fe192-1ca1-11eb-36c4-f9bd2b01a5e5
 # ╠═251f0262-1a0c-11eb-39a3-09be67091dc8
-# ╟─83aa9cea-1a0c-11eb-281d-699665da2b4f
+# ╠═83aa9cea-1a0c-11eb-281d-699665da2b4f
 # ╠═af5c6bea-1c9c-11eb-35ae-250337e4fc86
 # ╠═b3ab93d2-1a0b-11eb-0f5a-cdca19af3d89
 # ╟─71dc652e-1c9c-11eb-396c-cfd9ee2261fe
