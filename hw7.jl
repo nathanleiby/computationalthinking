@@ -157,6 +157,10 @@ box_scene = [
 		[0,-10],
 		[0,1]
 		),
+	Wall(
+		[0, 10],
+		[0, -1]
+		),
 	# your code here
 	]
 
@@ -176,7 +180,7 @@ struct Photon
 	p::Vector{Float64}
 
 	"Direction vector"
-	l::Vector{Float64}
+	l::Vector{Float64} # Q: why is direction called l?
 
     "Current Index of Refraction"
 	ior::Real
@@ -258,8 +262,9 @@ where $p$ is the position, $\hat \ell$ is the direction of the light, and $\hat 
 
 # ╔═╡ abe3de54-1ca0-11eb-01cd-11fe798bfb97
 function intersection_distance(photon::Photon, wall::Wall)
-	
-	return missing
+	numerator = dot(photon.p - wall.position, wall.normal)
+	denominator = dot(photon.l, wall.normal) 
+	return -1 * numerator / denominator
 end
 
 # ╔═╡ 42d65f56-1aca-11eb-1079-e32f85554349
@@ -281,8 +286,13 @@ We are using _floating points_ (`Float64`) to store positions, distances, etc., 
 
 # ╔═╡ a5847264-1ca0-11eb-0b45-eb5388f6e688
 function intersection(photon::Photon, wall::Wall; ϵ=1e-3)
-	
-	return missing
+	d = intersection_distance(photon, wall)
+	if d <= ϵ 
+		return Miss()
+	end
+		
+	point = photon.p + photon.l * d
+	return Intersection(wall, d, point)
 end
 
 # ╔═╡ 7f286ccc-1c75-11eb-1270-95a87840b300
@@ -324,6 +334,8 @@ Because we used two different types for hits and misses, we can express this in 
 
 # ╔═╡ 6c37c5f4-1a09-11eb-08ae-9dce752f29cb
 begin
+	# the power of multiple dispatch...
+	# we can change isless() to make sort() work for us!
 	Base.isless(a::Miss, b::Miss) = false
 	Base.isless(a::Miss, b::Intersection) = false
 	Base.isless(a::Intersection, b::Miss) = true
@@ -348,15 +360,6 @@ By taking the minimum, we have found our closest hit! Let's turn this into a fun
 
 👉 Write a function `closest_hit` that takes a `photon` and a vector of objects. Calculate the vector of `Intersection`s/`Miss`es, and return the `minimum`.
 """
-
-# ╔═╡ 19cf420e-1c7c-11eb-1cb8-dd939fee1276
-function closest_hit(photon::Photon, objects::Vector{<:Object})
-	
-	return missing
-end
-
-# ╔═╡ b8cd4112-1c7c-11eb-3b2d-29170ad9beb5
-test_closest = closest_hit(philip, ex_1_scene)
 
 # ╔═╡ e9c6a0b8-1ad0-11eb-1606-0319caf0948a
 md"""
@@ -516,17 +519,6 @@ let
 	plot_photon_arrow!(p, philip, 5)
 end
 
-# ╔═╡ a99c40bc-1c7c-11eb-036b-7fe6e9b937e5
-let
-	p = plot_scene(ex_1_scene)
-	
-	plot_photon_arrow!(p, philip, 4; label="Philip")
-	
-	scatter!(p, test_closest.point[1:1], test_closest.point[2:2], label="Closest hit")
-	
-	p |> as_svg
-end
-
 # ╔═╡ 1ee0787e-1a08-11eb-233b-43a654f70117
 let
 	p = plot_scene(ex_1_scene, legend=false, xlim=(-11,11), ylim=(-11,11))
@@ -665,6 +657,26 @@ sort(all_intersections)
 
 # ╔═╡ 63ef21c6-1c7a-11eb-2f3c-c5ac16bc289f
 minimum(all_intersections)
+
+# ╔═╡ 19cf420e-1c7c-11eb-1cb8-dd939fee1276
+function closest_hit(photon::Photon, objects::Vector{<:Object})
+	all_intersections = [intersection(photon, o) for o in objects]
+	return minimum(all_intersections)
+end
+
+# ╔═╡ b8cd4112-1c7c-11eb-3b2d-29170ad9beb5
+test_closest = closest_hit(philip, ex_1_scene)
+
+# ╔═╡ a99c40bc-1c7c-11eb-036b-7fe6e9b937e5
+let
+	p = plot_scene(ex_1_scene)
+	
+	plot_photon_arrow!(p, philip, 4; label="Philip")
+	
+	scatter!(p, test_closest.point[1:1], test_closest.point[2:2], label="Closest hit")
+	
+	p |> as_svg
+end
 
 # ╔═╡ af5c6bea-1c9c-11eb-35ae-250337e4fc86
 test_sphere = Sphere(
