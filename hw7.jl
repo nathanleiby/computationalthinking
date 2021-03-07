@@ -608,18 +608,35 @@ function intersection(photon::Photon, sphere::Sphere; ϵ=1e-3)
 	t1 = (-b + sqrt(discrim)) / 2a
 	t2 = (-b - sqrt(discrim)) / 2a
 	
-	# filter out negative times
-	options = [t1, t2]
-	filter!(x -> x >= zero(x), options)
+		
+	function distance(t)
+		V = photon.l * t
+		d = sqrt(sum(transpose(V) * V))
+		return sign(t) * d # if time < 0, make sure we treat as backwards
+	end
 	
-	V = photon.l * min(options...)
-	d = sqrt(sum(transpose(V) * V))
-
+	
+	options = [t1, t2]
+	distances = map(distance, options)
+	possibles = filter(x -> x >= ϵ, distances)
+	if length(possibles) == 0 
+		return Miss() # TODO: possible?! :)
+	end
+	
+	d = min(possibles...)
+	
+	V = missing
+	if d == distances[1]
+		V = photon.l * t1
+	else
+		V = photon.l * t2
+	end
+	
 	return Intersection(
 		sphere,
-		d,
-		photon.p + V
-	)		
+		d, # distance
+		photon.p + V # point
+ 	)		
 end
 
 # ╔═╡ a306e880-19eb-11eb-0ff1-d7ef49777f63
@@ -806,7 +823,7 @@ end
 # ╔═╡ 71b70da6-193e-11eb-0bc4-f309d24fd4ef
 md"
 
-Now to move on to lenses. Like in lecture, we will focus exclusively on spherical lenses. Ultimately, there isn't a big difference between a lens and a spherical drop of water. It just has a slightly different refractive index and it's normal is defined slightly differently.
+Now to move on to lenses. Like in lecture, we will focus exclusively on spherical lenses. Ultimately, there isn't a big difference between a lens and a spherical drop of water. It just has a slightly different refractive index and its normal is defined slightly differently.
 "
 
 # ╔═╡ 54b81de0-193f-11eb-004d-f90ec43588f8
@@ -826,8 +843,25 @@ md"""
 
 # ╔═╡ 427747d6-1ca1-11eb-28ae-ff50728c84fe
 function interact(photon::Photon, hit::Intersection{Sphere})
+	hp = hit.point
+	sphere = hit.object
 	
-	return missing
+	# if we're entering the sphere, then current ior is 1 (air)
+	ior_new = photon.ior == 1.0 ? sphere.ior : 1
+	
+	l_new = refract(
+		photon.l, 
+		sphere_normal_at(hp, sphere),
+		photon.ior, 
+		ior_new,
+	)
+	
+	# l_new = photon.l
+	return Photon(
+		hp,
+		l_new,
+		ior_new,
+	)	
 end
 
 # ╔═╡ 0b03316c-1c80-11eb-347c-1b5c9a0ae379
@@ -894,10 +928,10 @@ let
 	
 	p = plot_scene(scene, legend=false, xlim=(-11,11), ylim=(-11,11))
 	
-	path = accumulate(1:N; init=test_lens_photon) do old_photon, i
+	path = accumulate(1:N; init=test_lens_photon) do old_photon, _
 		step_ray(old_photon, scene)
 	end
-	
+
 	line = [test_lens_photon.p, [r.p for r in path]...]
 	plot!(p, first.(line), last.(line), lw=5, color=:red)
 	
@@ -939,7 +973,7 @@ md"""
 """
 
 # ╔═╡ 270762e4-1ca4-11eb-2fb4-392e5c3b3e04
-
+# TODO
 
 # ╔═╡ bbf730c8-1ca6-11eb-3bb0-1188046339ac
 md"""
@@ -1187,7 +1221,7 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╟─584ce620-1935-11eb-177a-f75d9ad8a399
 # ╟─78915326-1937-11eb-014f-fff29b3660a0
 # ╠═14dc73d2-1a0d-11eb-1a3c-0f793e74da9b
-# ╠═71b70da6-193e-11eb-0bc4-f309d24fd4ef
+# ╟─71b70da6-193e-11eb-0bc4-f309d24fd4ef
 # ╟─54b81de0-193f-11eb-004d-f90ec43588f8
 # ╠═6fdf613c-193f-11eb-0029-957541d2ed4d
 # ╟─392c25b8-1add-11eb-225d-49cfca27bef4
@@ -1196,10 +1230,10 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╟─dced1fd0-1c9e-11eb-3226-17dc1e09e018
 # ╠═65aec4fc-1c9e-11eb-1c5a-6dd7c533d3b8
 # ╠═5895d9ae-1c9e-11eb-2f4e-671f2a7a0150
-# ╟─83acf10e-1c9e-11eb-3426-bb28e7bc6c79
+# ╠═83acf10e-1c9e-11eb-3426-bb28e7bc6c79
 # ╟─13fef49c-1c9e-11eb-2aa3-d3aa2bfd0d57
 # ╟─c492a1f8-1a0c-11eb-2c38-5921c39cf5f8
-# ╟─b65d9a0c-1a0c-11eb-3cd5-e5a2c4302c7e
+# ╠═b65d9a0c-1a0c-11eb-3cd5-e5a2c4302c7e
 # ╟─c00eb0a6-cab2-11ea-3887-070ebd8d56e2
 # ╟─3dd0a48c-1ca3-11eb-1127-e7c43b5d1666
 # ╠═270762e4-1ca4-11eb-2fb4-392e5c3b3e04
