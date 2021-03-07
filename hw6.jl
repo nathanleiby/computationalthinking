@@ -27,6 +27,9 @@ begin
 	using PlutoUI
 end
 
+# ╔═╡ 318aed88-7c8c-11eb-055d-3fd3c6d9c030
+using PlotlyBase
+
 # ╔═╡ 048890ee-106a-11eb-1a81-5744150543e8
 md"_homework 6, version 0_"
 
@@ -189,7 +192,7 @@ zeroten = LinRange(0.0, 10.0, 300);
 md"""
 **What happens if you make $h$ too small?**
 
-If you make $h$ too small, then the tangent slope begins to get steeper, approaching $-\infty$.
+If you make $h$ too small, then the tangent slope begins to get steeper, approaching $-\infty$. However, it also becomes unpredictable, where decreasing $h$ sometimes causes the slope to increaese and other times to decrease.
 
 _Why does this occur?_
 
@@ -198,11 +201,14 @@ _Why does this occur?_
 
 Recall that our approximation for the derivative is:
 
-$$\frac{h}{\Delta y}$$
+$$\frac{\Delta y}{h}$$
 
 Where step size is $h$ and change in the function's value is $\Delta y$.
 
-As $h \to 0$, $\Delta y \to 0$. Because we are computing using small floating point values, at some point those aren't able to handle the math of very small numbers well. At this point, $\Delta y$ being close to 0 overwhelms the numerator. When we divide by (almost) zero, the value approaches $\pm \infty$.
+As $h \to 0$, $\Delta y \to 0$. Because we are computing using small floating point values, at some point those aren't able to handle the math of very small numbers well. 
+
+
+At this point, $h$ being close to 0 overwhelms the numerator. When we divide by (almost) zero, the value approaches $\pm \infty$.
 """
 
 # ╔═╡ 43df67bc-10bb-11eb-1cbd-cd962a01e3ee
@@ -260,10 +266,12 @@ function euler_integrate(fprime::Function, fa::Number,
 	h = step(T)
 
 	out = []
-	for a in T
-		fa = euler_integrate_step(fprime, fa, a, h)
+	for t in T
+		fa = euler_integrate_step(fprime, fa, t, h)
 		push!(out, fa)
 	end
+	
+	# TODO: `accumulate` for simpler syntax?
 
 	return out
 end
@@ -581,7 +589,8 @@ However, because are taking steps with a given step size, it's likely that the s
 
 Possible stopping conditions:
 - (slope threshold) In `gradient_descent_1d_step`, if `m < ϵ`, stop.
-- (step size threshold) In `gradient_descent_1d`, stop if output of `gradient_descent_1d_step < ϵ` 
+- (step size threshold) In `gradient_descent_1d`, stop if output of `gradient_descent_1d_step < ϵ`, i.e. `η * m < ϵ` 
+- (objective function threshold) If the Δ in the objective function is < ϵ
 
 ϵ is a threshold, and could be an absolute threshold (e.g. ϵ = 0.001) or a relative threshold (e.g. ϵ = 0.1 of the previous value)
 
@@ -837,24 +846,34 @@ This time, instead of comparing two vectors of numbers, we need to compare two v
 
 """
 
-# ╔═╡ 754b5368-12e8-11eb-0763-e3ec56562c5f
+# ╔═╡ aea12bd8-7c85-11eb-1048-8f7bd1af401c
 begin
+	# magnitude(V) = return sqrt(sum(V.*V))
+	# sum(V.*V) == transpose(V) * V
 	""" Computes the magnitude (length) of a vector """
-	magnitude(V) = return sqrt(sum(map(x -> x^2, V)))
-	
-	function loss_sir(β, γ)
-		sir_ode_model = euler_SIR(β, γ, [.99, .01, 0], hw4_T)
-		sir_spatial_model = hw4_results
+	magnitude(V) = return sqrt(transpose(V) * V) # matrix 
+end
 
-		loss = 0
-		for t in hw4_T
-			v = sir_ode_model[t] - sir_spatial_model[t]
-			m = magnitude(v)
-			loss += m
-		end
+# ╔═╡ b710d154-7c85-11eb-2aaf-157110339cc7
+let
+	vec = [0, 1, 1]
+	magnitude(vec)
+end
 
-		return loss
+# ╔═╡ 754b5368-12e8-11eb-0763-e3ec56562c5f
+function loss_sir(β, γ)
+	sir_ode_model = euler_SIR(β, γ, [.99, .01, 0], hw4_T)
+	sir_spatial_model = hw4_results
+
+	loss = 0
+	for t in hw4_T
+		# weight each component of the vector equally
+		v = sir_ode_model[t] - sir_spatial_model[t]
+		m = magnitude(v)
+		loss += m
 	end
+
+	return loss
 end
 
 # ╔═╡ ee20199a-12d4-11eb-1c2c-3f571bbb232e
@@ -1376,6 +1395,9 @@ let
 	as_svg(p)
 end
 
+# ╔═╡ eb3d5cce-7c8b-11eb-0eda-6bb1caf60ba8
+
+
 # ╔═╡ Cell order:
 # ╟─048890ee-106a-11eb-1a81-5744150543e8
 # ╟─0565af4c-106a-11eb-0d38-2fb84493d86f
@@ -1463,7 +1485,7 @@ end
 # ╠═34dc4b02-1248-11eb-26b2-5d2610cfeb41
 # ╟─f46aeaf0-1246-11eb-17aa-2580fdbcfa5a
 # ╟─e3120c18-1246-11eb-3bf4-7f4ac45856e0
-# ╟─ebca11d8-12c9-11eb-3dde-c546eccf40fc
+# ╠═ebca11d8-12c9-11eb-3dde-c546eccf40fc
 # ╟─9fd2956a-1248-11eb-266d-f558cda55702
 # ╠═852be3c4-12e8-11eb-1bbb-5fbc0da74567
 # ╠═8a114ca8-12e8-11eb-2de6-9149d1d3bc3d
@@ -1474,6 +1496,7 @@ end
 # ╟─54a58f84-12e3-11eb-10b9-7d55a16c81ba
 # ╠═a0045046-1248-11eb-13bd-8b8ad861b29a
 # ╟─7e318fea-12e7-11eb-3490-b17e0d4dbc50
+# ╠═318aed88-7c8c-11eb-055d-3fd3c6d9c030
 # ╠═605aafa4-12e7-11eb-2d13-7f7db3fac439
 # ╟─9ae4ebac-12e3-11eb-0acc-23113f5264a9
 # ╟─5e0f16b4-12e3-11eb-212f-e565f97adfed
@@ -1511,6 +1534,8 @@ end
 # ╟─a9630d28-12d2-11eb-196b-773d8498b0bb
 # ╟─23c53be4-12d4-11eb-1d39-8d11b4431993
 # ╟─6016fccc-12d4-11eb-0f58-b9cd331cc7b3
+# ╠═aea12bd8-7c85-11eb-1048-8f7bd1af401c
+# ╠═b710d154-7c85-11eb-2aaf-157110339cc7
 # ╠═754b5368-12e8-11eb-0763-e3ec56562c5f
 # ╠═ee20199a-12d4-11eb-1c2c-3f571bbb232e
 # ╟─38b09bd8-12d5-11eb-2f7b-579e9db3973d
@@ -1532,3 +1557,4 @@ end
 # ╟─05bfc716-106a-11eb-36cb-e7c488050d54
 # ╠═df42aa9e-10c9-11eb-2c19-2d7ce40a1c6c
 # ╟─15b60272-10ca-11eb-0a28-599ed78cf98a
+# ╠═eb3d5cce-7c8b-11eb-0eda-6bb1caf60ba8
