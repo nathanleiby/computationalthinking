@@ -985,8 +985,8 @@ let
 	
 	N_steps = 3
 	test_photons = []
-	# for y in -4.5:.5:1.5
-	for y in -4:.5:1
+	for y in -4.5:.5:1.5
+	# for y in -4:.5:1
 		push!(test_photons, Photon([-5,y], [1,0], 1.0))
 	end
 	
