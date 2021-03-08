@@ -1,5 +1,10 @@
 # Discussion items:
 - HW7
+  - [ ] investigate the various mathematical derivations in the HW and make sure they make sense to me
+    - [ ] Ex3.1 Sphere => quadratic
+    - [ ] Ex4 Snells Law => written formula `l_2 = ...` (Derivation at 17m in lecture)
+  - [ ] Share interesting variation re: Spherial Abberation (`# for y in -4.5:.5:1.5`)
+  - Lol how James pops up and down at start/end of the videos (e.g. @24:50 in lecture14)
 - HW6
   - [x] `return h * fprime(a+h) + fa` ... `# TODO: why a + h` .. needs better context to explain. e.g. could average two adjacent values instead
   - [x] why small `h`

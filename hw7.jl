@@ -973,7 +973,34 @@ md"""
 """
 
 # ╔═╡ 270762e4-1ca4-11eb-2fb4-392e5c3b3e04
-# TODO
+let
+	sa_lens = Sphere(
+		[0, -1.5],
+		3,
+		1.5,
+	)
+	scene = [sa_lens, box_scene...]
+	
+	p = plot_scene(scene, legend=false, xlim=(-11,11), ylim=(-11,11))
+	
+	N_steps = 3
+	test_photons = []
+	# for y in -4.5:.5:1.5
+	for y in -4:.5:1
+		push!(test_photons, Photon([-5,y], [1,0], 1.0))
+	end
+	
+	for test_photon in test_photons
+		path = accumulate(1:N_steps; init=test_photon) do old_photon, i
+			step_ray(old_photon, scene)
+		end
+
+		line = [test_photon.p, [r.p for r in path]...]
+		plot!(p, first.(line), last.(line), lw=2, color=:red)
+	end
+	
+	p
+end |> as_svg
 
 # ╔═╡ bbf730c8-1ca6-11eb-3bb0-1188046339ac
 md"""
