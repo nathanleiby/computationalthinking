@@ -31,7 +31,7 @@
 
 # TODO
 
-
+- [ ] julia - how to determine latex symbol easily? e.g. hover to view latex for symbol in VSCode
 - [ ] PRs to ComputationalThinking Github
   - clarify `least_energy` vs `energies` in HW.
   - add Lecture 7.2, 7.3: add a `head` function or use `first(df, 10)`
