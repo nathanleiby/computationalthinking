@@ -507,7 +507,6 @@ begin
 			return interact(ray, hit, num_intersections, objects)
 		end
 	end
-
 end
 
 # ╔═╡ 6b91a58a-1ef6-11eb-1c36-2f44713905e1
@@ -529,6 +528,26 @@ end
 
 # ╔═╡ 086e1956-204e-11eb-2524-f719504fb95b
 interact(photon::Photon, ::Miss, ::Any, ::Any) = photon
+
+# ╔═╡ 1c7bce7c-8f3c-11eb-3c2d-f34c896dbed4
+let
+	reflective_surface = Surface(1.0, 0.0, RGBA(1,1,1,0.0), 1.5)
+	x = 25
+	n_scene = [
+		sky,
+		Sphere([-x,x,0], 20, reflective_surface),
+		Sphere([x,-x,-x], 20, reflective_surface),
+		Sphere([-x,-x,-x], 20, reflective_surface),
+		Sphere([x,x,0], 20, reflective_surface),
+		
+		# Sphere([0,0,-x], 20, reflective_surface),
+		# Sphere([0,0,x], 20, reflective_surface),
+	]
+	
+	cam = Camera((600,360), 16, -10, [0,10,100])
+
+	ray_trace(n_scene, cam; num_intersections=3)
+end
 
 # ╔═╡ d1970a34-1ef7-11eb-3e1f-0fd3b8e9657f
 md"""
@@ -1036,6 +1055,7 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╠═a9754410-204d-11eb-123e-e5c5f87ae1c5
 # ╠═0cbe4446-8f38-11eb-0e01-3f8980dbf396
 # ╠═086e1956-204e-11eb-2524-f719504fb95b
+# ╠═1c7bce7c-8f3c-11eb-3c2d-f34c896dbed4
 # ╠═1f66ba6e-1ef8-11eb-10ba-4594f7c5ff19
 # ╟─d1970a34-1ef7-11eb-3e1f-0fd3b8e9657f
 # ╠═16f4c8e6-2051-11eb-2f23-f7300abea642
