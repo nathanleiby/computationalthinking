@@ -496,8 +496,24 @@ begin
 		# TODO: Refraction
 		# new_ior = ray.ior / hit.object.s.ior
 
-		new_ray = Photon(hit.point, new_l, ray.c, ray.ior)
-		return step_ray(new_ray, objects, num_intersections - 1)
+		# split into up to 3 rays
+		
+		# reflected_ray
+		
+		color_ray = Photon(hit.point, new_l, ray.c, ray.ior)
+		reflected_ray = Photon(hit.point, new_l, ray.c, ray.ior)
+		refracted_ray = Photon(hit.point, new_l, ray.c, ray.ior)
+		
+		color_out = step_ray(reflected_ray, objects, num_intersections - 1)
+		reflected_out = step_ray(reflected_ray, objects, num_intersections - 1)
+		refracted_out = step_ray(refracted_ray, objects, num_intersections - 1)
+		
+		
+		final_color = (color_out.c + reflected_out.c + refracted_out.c) / 3
+		r = reflected_out
+		final_ray = Photon(r.p, r.l, final_color, r.ior)
+		
+		return final_ray
 	end
 	
 	function step_ray(ray::Photon, objects::Vector{O},
@@ -538,10 +554,10 @@ let
 	x = 25
 	n_scene = [
 		sky,
-		Sphere([-x,x,0], 20, reflective_surface),
+		Sphere([-2x,x,0], 20, reflective_surface),
 		Sphere([x,-x,-x], 20, reflective_surface),
 		Sphere([-x,-x,-x], 20, reflective_surface),
-		Sphere([x,x,0], 20, reflective_surface),
+		# Sphere([x,x,0], 20, reflective_surface),
 		
 		# Sphere([0,0,-x], 20, reflective_surface),
 		# Sphere([0,0,x], 20, reflective_surface),
