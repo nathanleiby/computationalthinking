@@ -155,10 +155,10 @@ function refract(
 	# n is the normal, which points outwards from the sphere
 	# n_oriented may flip the normal, depending on whether our ray 
 	# is entering (flipped) or exiting (unchanged) the sphere
-	n̂_oriented = if dot(ℓ₁, n̂) > 0
-		n̂
-	else
+	n̂_oriented = if -dot(ℓ₁, n̂) < 0
 		-n̂
+	else
+		n̂
 	end
 	
 	# c is the portion of the ray's vecocity projected onto the n̂_oriented
@@ -234,6 +234,27 @@ returns normal vector for a given point on the boundary of the sphere
 """
 function sphere_normal_at(p::Vector{Float64}, s::Sphere)
 	normalize(p - s.p)
+end
+
+# ╔═╡ 022f624a-8f4d-11eb-164e-af89b01f6281
+function reflect(ray::Photon, hit::Intersection{Sphere})::Photon
+	n = sphere_normal_at(hit.point, hit.object)
+	new_l = reflect(ray.l, n)
+	Photon(hit.point, new_l, ray.c, ray.ior)
+end
+
+# ╔═╡ daf08b60-8f4e-11eb-2543-63354147ee7c
+function refract(ray::Photon, hit::Intersection{Sphere})::Photon
+	n = sphere_normal_at(hit.point, hit.object)
+	old_ior = ray.ior
+	
+	# new ior depends on whether we're entering or exiting object
+	# if the ray has an ior of 1, we know it's currently outside an object
+	new_ior = old_ior == 1 ? hit.object.s.ior : 1
+
+	new_l = refract(ray.l, n, old_ior, new_ior)
+	
+	Photon(hit.point, new_l, ray.c, new_ior)
 end
 
 # ╔═╡ 452d6668-1ec7-11eb-3b0a-0b8f45b43fd5
@@ -489,10 +510,8 @@ end
 # ╔═╡ 0cbe4446-8f38-11eb-0e01-3f8980dbf396
 begin
 	function interact(ray::Photon, hit::Intersection{Sphere}, num_intersections::Int, objects::Any)
-
-		n = sphere_normal_at(hit.point, hit.object)
-		new_l = reflect(ray.l, n)
-
+		
+		stopped = zeros(length(ray.l))
 		# TODO: Refraction
 		# new_ior = ray.ior / hit.object.s.ior
 
@@ -500,20 +519,44 @@ begin
 		
 		# reflected_ray
 		
-		color_ray = Photon(hit.point, new_l, ray.c, ray.ior)
-		reflected_ray = Photon(hit.point, new_l, ray.c, ray.ior)
-		refracted_ray = Photon(hit.point, new_l, ray.c, ray.ior)
+
+		if typeof(hit.object) == SkyBox
+			return Photon(hit.point, ray.l, hit.object.s.c, ray.ior)
+		elseif typeof(hit.object) == Sphere
+			# ray at the point of collision, without any changes
+			r = Photon(hit.point, ray.l, ray.c, ray.ior)
+			
+			color_ray = r
+			reflected_ray = r
+			refracted_ray = r
+			if hit.object.s.c.alpha > 0 # color intensity
+				# stop
+				v = zeros(length(ray.l))
+				color_ray = Photon(r.p, stopped, hit.object.s.c, r.ior)
+			end
+			if hit.object.s.r > 0 # reflectivity
+				reflected_ray = step_ray(reflect(ray, hit), objects, num_intersections - 1)
+			end
+			if hit.object.s.t > 0  # transmission (refract)
+				refracted_ray = step_ray(refract(ray, hit), objects, num_intersections - 1)
+			end
+
+			# WARNING: These line breaks don't behave the way I expected :(
+			# TODO: why
+# 			final_color = color_ray.c * hit.object.s.c.alpha 
+# 				+ reflected_ray.c * hit.object.s.r 
+# 				+ refracted_ray.c * hit.object.s.t
 		
-		color_out = step_ray(reflected_ray, objects, num_intersections - 1)
-		reflected_out = step_ray(reflected_ray, objects, num_intersections - 1)
-		refracted_out = step_ray(refracted_ray, objects, num_intersections - 1)
-		
-		
-		final_color = (color_out.c + reflected_out.c + refracted_out.c) / 3
-		r = reflected_out
-		final_ray = Photon(r.p, r.l, final_color, r.ior)
-		
-		return final_ray
+			# THIS WORKS tho
+			final_color = color_ray.c * hit.object.s.c.alpha +  
+				 reflected_ray.c * hit.object.s.r +
+				 refracted_ray.c * hit.object.s.t
+
+			
+			return Photon(r.p, stopped, final_color, r.ior)
+		else
+			error(hit.object)
+		end
 	end
 	
 	function step_ray(ray::Photon, objects::Vector{O},
@@ -545,22 +588,32 @@ let
 	ray_trace(scene, basic_camera; num_intersections=4)
 end
 
+# ╔═╡ 51279fb4-8f52-11eb-2137-7fa588028ad8
+
+
 # ╔═╡ 086e1956-204e-11eb-2524-f719504fb95b
 interact(photon::Photon, ::Miss, ::Any, ::Any) = photon
 
 # ╔═╡ 1c7bce7c-8f3c-11eb-3c2d-f34c896dbed4
 let
-	reflective_surface = Surface(1.0, 0.0, RGBA(1,1,1,0.0), 1.5)
 	x = 25
 	n_scene = [
 		sky,
-		Sphere([-2x,x,0], 20, reflective_surface),
-		Sphere([x,-x,-x], 20, reflective_surface),
-		Sphere([-x,-x,-x], 20, reflective_surface),
-		# Sphere([x,x,0], 20, reflective_surface),
 		
-		# Sphere([0,0,-x], 20, reflective_surface),
-		# Sphere([0,0,x], 20, reflective_surface),
+		# reflect
+		Sphere([-2x,0,-2x], 20, Surface(1, 0, RGBA(1,1,1,0.0), 1.5)),
+		# refraction
+		Sphere([0,0,-2x], 20, Surface(0, 1.0, RGBA(1,1,1,0.0), 1.5)),
+		# color
+		Sphere([2x,0,-2x], 20, Surface(0, 0, RGBA(1,1,1,1.0), 1.5)),
+
+		# Sphere([0,0,0], 20, Surface(.6, 0.2, RGBA(1,0,0,0.2), 1.5)),
+		# Sphere([0,0,2x], 20, Surface(.6, 0.2, RGBA(1,0,0,0.2), 1.5)),
+		
+		# Sphere([-x,x,0], 20, Surface(.6, 0.2, RGBA(1,0,0,0.2), 1.5)),
+		# Sphere([x,x,0], 20, Surface(.4, 0.4, RGBA(1,0,0,0.2), 1.5)),
+		# Sphere([x,-x,-x], 20, Surface(.2, 0.6, RGBA(0,1,0,0.2), 1.5)),
+		# Sphere([-x,-x,-x], 20, Surface(0, 0.8, RGBA(0,0,1,0.2), 1.5)),
 	]
 	
 	cam = Camera((600,360), 16, -10, [0,10,100])
@@ -580,6 +633,8 @@ main_scene = [
 	Sphere([0,0,-25], 20, 
 		Surface(1.0, 0.0, RGBA(1,1,1,0.0), 1.5)),
 	
+	# With same refraction index as air, light doesn't get bent at all.
+	# aka "invisibility cloak"
 	Sphere([0,50,-100], 20, 
 		Surface(0.0, 1.0, RGBA(0,0,0,0.0), 1.0)),
 	
@@ -1041,7 +1096,9 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╠═89e98868-1fb2-11eb-078d-c9298d8a9970
 # ╟─dc36ceaa-205c-11eb-169c-bb4c36aaec9f
 # ╠═43306bd4-194d-11eb-2e30-07eabb8b29ef
+# ╠═022f624a-8f4d-11eb-164e-af89b01f6281
 # ╠═14dc73d2-1a0d-11eb-1a3c-0f793e74da9b
+# ╠═daf08b60-8f4e-11eb-2543-63354147ee7c
 # ╟─7f0bf286-2071-11eb-0cac-6d10c93bab6c
 # ╠═8a4e888c-1ef7-11eb-2a52-17db130458a5
 # ╟─9c3bdb62-1ef7-11eb-2204-417510bf0d72
@@ -1073,6 +1130,7 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╟─04a86366-208b-11eb-1977-ff7e4ae6b714
 # ╠═a9754410-204d-11eb-123e-e5c5f87ae1c5
 # ╠═0cbe4446-8f38-11eb-0e01-3f8980dbf396
+# ╠═51279fb4-8f52-11eb-2137-7fa588028ad8
 # ╠═086e1956-204e-11eb-2524-f719504fb95b
 # ╠═1c7bce7c-8f3c-11eb-3c2d-f34c896dbed4
 # ╠═1f66ba6e-1ef8-11eb-10ba-4594f7c5ff19
