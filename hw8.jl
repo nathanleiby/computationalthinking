@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.7
+# v0.12.21
 
 using Markdown
 using InteractiveUtils
@@ -104,6 +104,7 @@ struct Photon
 	"Color associated with the photon"
 	c::RGB
 	
+	"Index of refraction of medium photon is currently in"
 	ior::Real
 end
 
@@ -149,19 +150,34 @@ function refract(
 	
 	r = old_ior / new_ior
 	
-	n̂_oriented = if -dot(ℓ₁, n̂) < 0
-		-n̂
-	else
+	# TIL: ternary syntax in Julia
+	
+	# n is the normal, which points outwards from the sphere
+	# n_oriented may flip the normal, depending on whether our ray 
+	# is entering (flipped) or exiting (unchanged) the sphere
+	n̂_oriented = if dot(ℓ₁, n̂) > 0
 		n̂
+	else
+		-n̂
 	end
 	
+	# c is the portion of the ray's vecocity projected onto the n̂_oriented
 	c = -dot(ℓ₁, n̂_oriented)
 	
 	if abs(c) > 0.999
+		# the normal and the ray's velocity are basically pointed in the same direction. 
+		# it's possible this is due to floating point error
+		# ignore refraction in this case
 		ℓ₁
 	else
 		f = 1 - r^2 * (1 - c^2)
 		if f < 0
+			# we're about to sqrt this, so negative number definitely won't work!
+			# what kind of scenario would lead to a negative number?
+			# * if the old_ior > the new_ior, then r >= 1
+			# * if c is very small, i.e the ray is nearly orthogonal to the normal
+			#
+			# What does f < 0 mean, more intuitively?
 			ℓ₁
 		else
 			normalize(r * ℓ₁ + (r*c - sqrt(f)) * n̂_oriented)
@@ -193,21 +209,26 @@ end
 # ╔═╡ 9c3bdb62-1ef7-11eb-2204-417510bf0d72
 html"""
 <h4 id="sphere-defs">Sphere</h4>
-<p>Aasdf</p>
 """
 
 # ╔═╡ cb7ed97e-1ef7-11eb-192c-abfd66238378
 struct Sphere <: Object
-	# Lens position
+	# position, i.e. center point
 	p::Vector{Float64}
 
-	# Lens radius
+	# radius
 	r::Float64
-
+	
+	# surface, which has qualities that impact the ray 
 	s::Surface
 end
 
 # ╔═╡ 6fdf613c-193f-11eb-0029-957541d2ed4d
+"""
+`sphere_normal_at(p::Vector{Float64}, s::Sphere)`
+
+returns normal vector for a given point on the boundary of the sphere 
+"""
 function sphere_normal_at(p::Vector{Float64}, s::Sphere)
 	normalize(p - s.p)
 end
@@ -241,6 +262,9 @@ In poarticular, we will create a 2D screen just in front of the camera and send 
 $(RemoteResource("https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Ray_trace_diagram.svg/1920px-Ray_trace_diagram.svg.png", :width=>400, :style=>"display: block; margin: auto;"))
 """
 
+# ╔═╡ fe55119a-8f33-11eb-10bd-2fda03e0f137
+md"N: Neat! Callout of the 'shadow ray', which perhaps can add as an extension"
+
 # ╔═╡ 1a446de6-1ec9-11eb-1e2f-6f4376005d24
 md"""
 Because we are not considering camera motion for this exercise, we will assume that the image plane is constrained to the horizontal plane, but that the camera, itself, can be some distance behind it.
@@ -255,7 +279,7 @@ Let's start with the struct
 
 # ╔═╡ 88576c6e-1ecb-11eb-3e34-830aeb433df1
 struct Camera <: Object
-	"Set of all pixels, counts as scene resolution"
+	"Set of all pixels, counts as scene resolution" # dimensions, in 2d
 	resolution::Tuple{Int64,Int64}
 
 	"Physical size of aperture"
@@ -264,7 +288,7 @@ struct Camera <: Object
 	"Camera's distance from screen"
 	focal_length::Float64
 
-	"Camera's position"
+	"Camera's position" # point in 3d
 	p::Vector{Float64}
 end
 
@@ -292,8 +316,9 @@ function init_rays(cam::Camera)
 	ys = LinRange(0.5* dim[2], -0.5 * dim[2], cam.resolution[2])
 	
 	pixel_positions = [[x, y, cam.focal_length] for y in ys, x in xs]
-	directions = normalize.(pixel_positions)
+	directions = normalize.(pixel_positions) # TIL: normalize() is built-in 
 	
+	# initialize photons pointed at each of the pixels in the screen
 	Photon.([cam.p], directions, [zero(RGB)], [1.0])
 end
 
@@ -373,7 +398,7 @@ end
 # ╔═╡ 89e98868-1fb2-11eb-078d-c9298d8a9970
 function closest_hit(photon::Photon, objects::Vector{<:Object})
 	hits = intersection.([photon], objects)
-	
+
 	minimum(hits)
 end
 
@@ -399,6 +424,7 @@ function gradient_skybox_color(position, skybox)
 	extents = skybox.r
 	c = zero(RGB)
 	
+	# N: Is it possible for the position to be outside the extents of the skybox?
 	if position[1] < extents && position[1] > -extents
 		c += RGB((position[1]+extents)/(2.0*extents), 0, 0)
 	end
@@ -419,7 +445,7 @@ sky = SkyBox([0.0, 0.0, 0.0], 1000, gradient_skybox_color)
 
 # ╔═╡ 49651bc6-2071-11eb-1aa0-ff829f7b4350
 md"""
-Let's set up a basic scene and trace an image! Since our skybox is _spherical_ we can use **the same `intersect`** method as we use for `Sphere`s. Have a look at [the `intersect` method](#sphere-defs), we already added `SkyBox` as a possible type.
+Let's set up a basic scene and trace an image! Since our skybox is _spherical_ we can use **the same `intersection`** method as we use for `Sphere`s. Have a look at [the `intersection` method](#sphere-defs), we already added `SkyBox` as a possible type.
 """
 
 # ╔═╡ daf80644-2070-11eb-3363-c577ae5846b3
@@ -457,19 +483,31 @@ function interact(ray::Photon, hit::Intersection{SkyBox}, ::Any, ::Any)
 	Photon(hit.point, ray.l, ray_color, ray.ior)
 end
 
-# ╔═╡ 086e1956-204e-11eb-2524-f719504fb95b
-interact(photon::Photon, ::Miss, ::Any, ::Any) = photon
+# ╔═╡ 0cbe4446-8f38-11eb-0e01-3f8980dbf396
+begin
+	function interact(ray::Photon, hit::Intersection{Sphere}, num_intersections::Int, objects::Any)
 
-# ╔═╡ 95ca879a-204d-11eb-3473-959811aa8320
-function step_ray(ray::Photon, objects::Vector{O},
+		n = sphere_normal_at(hit.point, hit.object)
+		new_l = reflect(ray.l, n)
+
+		# TODO: Refraction
+		# new_ior = ray.ior / hit.object.s.ior
+
+		new_ray = Photon(hit.point, new_l, ray.c, ray.ior)
+		return step_ray(new_ray, objects, num_intersections - 1)
+	end
+	
+	function step_ray(ray::Photon, objects::Vector{O},
 			   num_intersections) where {O <: Object}
 
-	if num_intersections == 0
-		ray
-	else
-		hit = closest_hit(ray, objects)
-		interact(ray, hit, num_intersections, objects)
+		if num_intersections == 0
+			return ray
+		else
+			hit = closest_hit(ray, objects)
+			return interact(ray, hit, num_intersections, objects)
+		end
 	end
+
 end
 
 # ╔═╡ 6b91a58a-1ef6-11eb-1c36-2f44713905e1
@@ -477,6 +515,7 @@ function ray_trace(objects::Vector{O}, cam::Camera;
 				   num_intersections = 10) where {O <: Object}
 	rays = init_rays(cam)
 
+	# TODO: Support splitting into multiple
 	new_rays = step_ray.(rays, [objects], [num_intersections])
 
 	extract_colors(new_rays)
@@ -487,6 +526,9 @@ let
 	scene = [sky]
 	ray_trace(scene, basic_camera; num_intersections=4)
 end
+
+# ╔═╡ 086e1956-204e-11eb-2524-f719504fb95b
+interact(photon::Photon, ::Miss, ::Any, ::Any) = photon
 
 # ╔═╡ d1970a34-1ef7-11eb-3e1f-0fd3b8e9657f
 md"""
@@ -964,12 +1006,13 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╠═14dc73d2-1a0d-11eb-1a3c-0f793e74da9b
 # ╟─7f0bf286-2071-11eb-0cac-6d10c93bab6c
 # ╠═8a4e888c-1ef7-11eb-2a52-17db130458a5
-# ╠═9c3bdb62-1ef7-11eb-2204-417510bf0d72
+# ╟─9c3bdb62-1ef7-11eb-2204-417510bf0d72
 # ╠═cb7ed97e-1ef7-11eb-192c-abfd66238378
 # ╠═093b9e4a-1f8a-11eb-1d32-ad1d85ddaf42
 # ╠═6fdf613c-193f-11eb-0029-957541d2ed4d
 # ╟─452d6668-1ec7-11eb-3b0a-0b8f45b43fd5
 # ╟─791f0bd2-1ed1-11eb-0925-13c394b901ce
+# ╟─fe55119a-8f33-11eb-10bd-2fda03e0f137
 # ╟─1a446de6-1ec9-11eb-1e2f-6f4376005d24
 # ╠═88576c6e-1ecb-11eb-3e34-830aeb433df1
 # ╠═e774d6a8-2058-11eb-015a-83b4b6104e6e
@@ -991,8 +1034,8 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╠═6b91a58a-1ef6-11eb-1c36-2f44713905e1
 # ╟─04a86366-208b-11eb-1977-ff7e4ae6b714
 # ╠═a9754410-204d-11eb-123e-e5c5f87ae1c5
+# ╠═0cbe4446-8f38-11eb-0e01-3f8980dbf396
 # ╠═086e1956-204e-11eb-2524-f719504fb95b
-# ╠═95ca879a-204d-11eb-3473-959811aa8320
 # ╠═1f66ba6e-1ef8-11eb-10ba-4594f7c5ff19
 # ╟─d1970a34-1ef7-11eb-3e1f-0fd3b8e9657f
 # ╠═16f4c8e6-2051-11eb-2f23-f7300abea642

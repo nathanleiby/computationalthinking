@@ -1,8 +1,12 @@
 # Discussion items:
+- HW8
+	- still feeling some pain with auto-complete and docs.
+  	- related pain made worse due to ^ is the inconsistency is annoying... hit.point vs sphere.p vs Skybox.center
+	  - workaround: I also have code open in vscode and am jumping to definition to lookup funcs or structs
 - HW7
-  - [ ] investigate the various mathematical derivations in the HW and make sure they make sense to me
-    - [ ] Ex3.1 Sphere => quadratic
-    - [ ] Ex4 Snells Law => written formula `l_2 = ...` (Derivation at 17m in lecture)
+  - [x] investigate the various mathematical derivations in the HW and make sure they make sense to me
+    - [x] Ex3.1 Sphere => quadratic
+    - [] Ex4 Snells Law => written formula `l_2 = ...` (Derivation at 17m in lecture)
   - [ ] Share interesting variation re: Spherial Abberation (`# for y in -4.5:.5:1.5`)
     - from lecture ![img1](spherical-aberration.png)
     - with rays that enter along edge of circle: ![img2](spherical-aberration1.png)
