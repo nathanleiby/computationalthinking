@@ -658,6 +658,18 @@ let
 	ray_trace(main_scene, cam; num_intersections=3)
 end
 
+# ╔═╡ b202d804-8f56-11eb-20d5-af3d52847fe0
+let
+	# cam = Camera((600,360), 16, -15, [0,10,100]) #~1s
+	# cam = Camera((640,480), 16, -15, [0,10,100]) #~5s
+	cam = Camera((1280,720), 16, -15, [0,10,100]) #~10s
+	# cam = Camera((1920,1080), 16, -15, [0,10,100]) #~30s
+	# cam = Camera((2560,1440), 16, -15, [0,10,100])
+
+	
+	ray_trace(main_scene, cam; num_intersections=3)
+end
+
 # ╔═╡ 67c0bd70-206a-11eb-3935-83d32c67f2eb
 md"""
 ## **Bonus:** Escher
@@ -684,6 +696,12 @@ escher_sphere = Sphere([0,0,0], 20,
 
 # ╔═╡ 373b6a26-206d-11eb-1e67-9debb032f69e
 escher_cam = Camera((300,300), 30, -10, [0,00,30])
+
+# ╔═╡ 66be6872-8f56-11eb-36f3-ff2b761c47eb
+escher_cam_640x480 = Camera((640,480), 30, -10, [0,00,30])
+
+# ╔═╡ 6ee57f9a-8f56-11eb-2fe0-f7c1f7f166d0
+escher_cam_720p = Camera((1280,720), 30, -10, [0,00,30])
 
 # ╔═╡ 5dfec31c-206d-11eb-23a2-259f2c205cb5
 md"""
@@ -753,9 +771,28 @@ Another option is that we approximate the panaroma by _padding_ the image of you
 """
 
 # ╔═╡ 6480b85c-2067-11eb-0262-f752d306d8ae
-function padded(img)
+function padded(img::AbstractArray)
+	x,y = size(img)
+	x_padding = x÷2		
+	y_padding = y # nit: I've mixed up X and y
 	
-	return missing
+			
+	new_x = x+x_padding*2
+	new_y = y+y_padding*2
+	out = zeros(RGB, new_x,new_y)
+	
+	for x′ in 1:new_x
+		for y′ in 1:new_y
+			intensity =  (1 - x′/new_x) * rand(0.5:.1:1)
+			noise = RGB(intensity, intensity, intensity) # gray-ish
+			out[x′,y′] = noise
+			if x′ > x_padding && x′ <= new_x - x_padding && y′ > y_padding && y′ <= new_y - y_padding
+				out[x′,y′] = img[x′ - x_padding, y′- y_padding]	
+			end
+		end
+	end
+	
+	return out
 end
 
 # ╔═╡ 3de614da-2091-11eb-361a-83bcf357c394
@@ -1025,7 +1062,7 @@ face = process_raw_camera_data(wow)
 let
 	face_skybox = image_skybox(face)
 	scene = [face_skybox, escher_sphere]
-	ray_trace(scene, escher_cam; num_intersections=3)
+	ray_trace(scene, escher_cam_640x480; num_intersections=3)
 end
 
 # ╔═╡ 7d03b258-2067-11eb-3070-1168e282b2ea
@@ -1045,7 +1082,7 @@ let
 		escher_sphere,
 	]
 	
-	ray_trace(scene, escher_cam; num_intersections=20)
+	ray_trace(scene, escher_cam_640x480; num_intersections=20)
 end
 
 # ╔═╡ ec31dce0-19c3-11eb-1487-23cc20cd5277
@@ -1134,6 +1171,7 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╠═086e1956-204e-11eb-2524-f719504fb95b
 # ╠═1c7bce7c-8f3c-11eb-3c2d-f34c896dbed4
 # ╠═1f66ba6e-1ef8-11eb-10ba-4594f7c5ff19
+# ╠═b202d804-8f56-11eb-20d5-af3d52847fe0
 # ╟─d1970a34-1ef7-11eb-3e1f-0fd3b8e9657f
 # ╠═16f4c8e6-2051-11eb-2f23-f7300abea642
 # ╟─7c804c30-208d-11eb-307c-076f2086ae73
@@ -1142,6 +1180,8 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╟─981e6bd2-206c-11eb-116d-6fad4e04ce34
 # ╠═7a12a99a-206d-11eb-2393-bf28b881087a
 # ╠═373b6a26-206d-11eb-1e67-9debb032f69e
+# ╠═66be6872-8f56-11eb-36f3-ff2b761c47eb
+# ╠═6ee57f9a-8f56-11eb-2fe0-f7c1f7f166d0
 # ╟─5dfec31c-206d-11eb-23a2-259f2c205cb5
 # ╠═6f1dbf48-206d-11eb-24d3-5154703e1753
 # ╟─dc786ccc-206e-11eb-29e2-99882e6613af
