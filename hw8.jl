@@ -203,6 +203,9 @@ struct Surface
 
 	# index of refraction
 	ior::Float64
+	
+	# inner constructor with error handling
+	Surface(r, t, c, ior) = r + t + c.alpha != 1 ? error("r + t + c.alpha != 1") : new(r,t,c,ior)
 
 end
 
