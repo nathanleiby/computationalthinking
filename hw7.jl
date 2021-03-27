@@ -263,7 +263,8 @@ where $p$ is the position, $\hat \ell$ is the direction of the light, and $\hat 
 # ╔═╡ abe3de54-1ca0-11eb-01cd-11fe798bfb97
 function intersection_distance(photon::Photon, wall::Wall)
 	numerator = dot(photon.p - wall.position, wall.normal)
-	denominator = dot(photon.l, wall.normal) 
+	denominator = dot(photon.l, wall.normal)
+	
 	return -1 * numerator / denominator
 end
 
@@ -338,7 +339,7 @@ begin
 	# we can change isless() to make sort() work for us!
 	Base.isless(a::Miss, b::Miss) = false
 	Base.isless(a::Miss, b::Intersection) = false
-	Base.isless(a::Intersection, b::Miss) = true
+	Base.isless(a::Intersection, b::Miss) = true # could Julia get this from above def
 	Base.isless(a::Intersection, b::Intersection) = a.distance < b.distance
 end
 
@@ -886,8 +887,14 @@ end
 
 # ╔═╡ 1a43b70c-1ca3-11eb-12a5-a94ebbba0e86
 function trace(photon::Photon, scene::Vector{<:Object}, N)
-	op(x, _) = step_ray(x, scene)
+	op(accum, element) = step_ray(accum, scene)
+
 	return accumulate(op, 1:N; init=photon)
+end
+
+# ╔═╡ 06e07ad0-86c8-11eb-05b5-a1001044f59d
+let
+	path = trace(philip, ex_1_scene, mirror_test_ray_N)
 end
 
 # ╔═╡ 1ee0787e-1a08-11eb-233b-43a654f70117
@@ -1229,6 +1236,7 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╟─7ba5dda0-1ad1-11eb-1c4e-2391c11f54b3
 # ╠═1a43b70c-1ca3-11eb-12a5-a94ebbba0e86
 # ╟─3cd36ac0-1a09-11eb-1818-75b36e67594a
+# ╟─06e07ad0-86c8-11eb-05b5-a1001044f59d
 # ╟─1ee0787e-1a08-11eb-233b-43a654f70117
 # ╟─7478330a-1c81-11eb-2f9f-099f1111032c
 # ╟─ba0a869a-1ad1-11eb-091f-916e9151f052
