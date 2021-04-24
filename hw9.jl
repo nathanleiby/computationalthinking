@@ -548,7 +548,7 @@ We are interested in how the **uncertainty in our input** $B$ (the climate feedb
 
 # ╔═╡ f2e55166-25ff-11eb-0297-796e97c62b07
 function prob_warming(model, amount_warmed, end_year)
-	
+	# helper fn so we can broadcast
 	trb(b) = temperature_response(model, b; end_year=end_year)
 	
 	# generate outcomes from our samples
@@ -659,7 +659,10 @@ md"""
 """
 
 # ╔═╡ 1d388372-2695-11eb-3068-7b28a2ccb9ac
+@bind log_CO2 Slider(1:.1:6; show_value=true, default=1)
 
+# ╔═╡ 0cf618e6-497e-45b1-9e81-b2375e7d7afb
+CO2 = 10^log_CO2
 
 # ╔═╡ 4c9173ac-2685-11eb-2129-99071821ebeb
 md"""
@@ -670,9 +673,12 @@ md"""
 """
 
 # ╔═╡ 736515ba-2685-11eb-38cb-65bfcf8d1b8d
-function step_model!(ebm::Model.EBM, CO2::Real)
-	
-	# your code here
+function step_model!(ebm::Model.EBM, new_CO2::Real)
+	# ebm.t = [ebm.t[end]]
+	ebm.t = [0]
+	ebm.T = [ebm.T[end]]
+	ebm.CO2 = t -> new_CO2
+	Model.run!(ebm)
 	
 	return ebm
 end
@@ -697,7 +703,7 @@ CO2max = 1_000_000
 Tneo = -48
 
 # ╔═╡ 06d28052-2531-11eb-39e2-e9613ab0401c
-ebm = Model.EBM(Tneo, 0., 5., Model.CO2_const)
+ebm = Model.EBM(Tneo, 0., 5., Model.CO2_const) # TODO: Discuss that I had to re-run this to get things back in a good state
 
 # ╔═╡ 378aed18-252b-11eb-0b37-a3b511af2cb5
 let
@@ -713,7 +719,8 @@ let
 	add_cold_hot_areas!(p)
 	add_reference_points!(p)
 	
-	# your code here 
+	# your code here
+	step_model!(ebm, CO2)
 	
 	plot!(p, 
 		[ebm.CO2(ebm.t[end])], [ebm.T[end]],
@@ -907,7 +914,7 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╠═3ccdac45-8a07-44f5-bf1b-03b3ef944100
 # ╠═7f05f7a9-fd01-4b0c-877c-12483a7bec90
 # ╟─0c260593-0679-4ab5-8110-c326dc68bd54
-# ╠═1ea81214-1fca-11eb-2442-7b0b448b49d6
+# ╟─1ea81214-1fca-11eb-2442-7b0b448b49d6
 # ╟─a0ef04b0-25e9-11eb-1110-cde93601f712
 # ╟─3e310cf8-25ec-11eb-07da-cb4a2c71ae34
 # ╟─d6d1b312-2543-11eb-1cb2-e5b801686ffb
@@ -917,6 +924,7 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─0e19f82e-2685-11eb-2e99-0d094c1aa520
 # ╟─1eabe908-268b-11eb-329b-b35160ec951e
 # ╠═1d388372-2695-11eb-3068-7b28a2ccb9ac
+# ╠═0cf618e6-497e-45b1-9e81-b2375e7d7afb
 # ╟─53c2eaf6-268b-11eb-0899-b91c03713da4
 # ╠═06d28052-2531-11eb-39e2-e9613ab0401c
 # ╟─4c9173ac-2685-11eb-2129-99071821ebeb
