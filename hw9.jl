@@ -722,6 +722,8 @@ let
 	# your code here
 	step_model!(ebm, CO2)
 	
+	# you could add a trail behind the black dot, or you could plot the stable and unstable branches. It's up to you! 
+	
 	plot!(p, 
 		[ebm.CO2(ebm.t[end])], [ebm.T[end]],
 		label=nothing,
@@ -768,8 +770,25 @@ md"""
 
 # ╔═╡ 9eb07a6e-2687-11eb-0de3-7bc6aa0eefb0
 co2_to_melt_snowball = let
+	# start condition
+	ebm = Model.EBM(Tneo, 0., 5., Model.CO2_const)
 	
-	missing
+	# target temp (when fully melted)
+	target_temp = 10
+	
+	# run simulations until we exceed target temp
+	CO2_powers = 1:0.1:6
+	end_CO2 = missing
+	for val in CO2_powers
+		new_CO2 = 10^val
+		ebm = step_model!(ebm, new_CO2)
+		if ebm.T[end] > target_temp
+			end_CO2 = new_CO2 
+			break
+		end
+	end
+	
+	end_CO2
 end
 
 # ╔═╡ 3a35598a-2527-11eb-37e5-3b3e4c63c4f7
