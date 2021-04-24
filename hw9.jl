@@ -242,6 +242,7 @@ md"""
 
 
 # ╔═╡ 269200ec-259f-11eb-353b-0b73523ef71a
+
 md"""
 #### Exercise 1.2 - _Doubling CO₂_
 
@@ -259,9 +260,12 @@ md"""
 
 # ╔═╡ 50ea30ba-25a1-11eb-05d8-b3d579f85652
 expected_double_CO2_year = let
+	year = 2050
+	ppm = Model.CO2_RCP85.(year)
+	# assert ppm > 560
+	year
 	
-	
-	missing
+	# TODO: more elegant code? having trouble working with Model
 end
 
 # ╔═╡ bade1372-25a1-11eb-35f4-4b43d4e8d156
@@ -299,7 +303,7 @@ let
 		size=(500,250), legend=:bottomright, 
 		title="Transient response to instant doubling of CO₂", 
 		ylabel="temperature change [°C]", xlabel="years after doubling",
-		# ylim=(-.5, (isfinite(ecs) && ecs < 4) ? 4 : 10),
+		ylim=(-.5, (isfinite(ecs) && ecs < 4) ? 4 : 10),
 	)
 	
 	plot!(p, [ebm_ECS.t[1], ebm_ECS.t[end]], ecs .* [1,1], 
@@ -316,7 +320,10 @@ let
 	for b in r
 		out = append!(out, ECS(B=b))
 	end
-	plot(r, out)
+	plot(r, out,
+			ls=:dash, color=:darkred, label="ECS",
+			title="ECS as func of B", 
+			ylabel="ECS", xlabel="B")
 end
 	
 
@@ -339,13 +346,16 @@ md"""
 """
 
 # ╔═╡ 3d72ab3a-2689-11eb-360d-9b3d829b78a9
-ECS_samples = missing
+ECS_samples = let
+	ecs(b) = ECS(B=b)
+	ecs.(B_samples)
+end
 
 # ╔═╡ b6d7a362-1fc8-11eb-03bc-89464b55c6fc
 md"**Answer:**"
 
 # ╔═╡ 1f148d9a-1fc8-11eb-158e-9d784e390b24
-
+histogram(ECS_samples, size=(600, 250), label=nothing, xlabel="ECS", ylabel="samples", xlim=(0,10))
 
 # ╔═╡ cf8dca6c-1fc8-11eb-1f89-099e6ba53c22
 md"It looks like the ECS distribution is **not normally distributed**, even though $B$ is. 
