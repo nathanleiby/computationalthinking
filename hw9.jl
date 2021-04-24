@@ -316,7 +316,7 @@ end |> as_svg
 # ╔═╡ b9f882d8-266b-11eb-2998-75d6539088c7
 let
 	out = []
-	r = -1:.01:1
+	r = -01:.01:1
 	for b in r
 		out = append!(out, ECS(B=b))
 	end
@@ -364,14 +364,38 @@ md"It looks like the ECS distribution is **not normally distributed**, even thou
 "
 
 # ╔═╡ 02173c7a-2695-11eb-251c-65efb5b4a45f
+mean_of_ecs_b = mean(ECS_samples)
 
+# ╔═╡ 43ee4030-c11f-4488-97a3-1b88da4d0ade
+ecs_of_mean_b = ECS(B=B̅)
+
+# ╔═╡ 1f3ddc3a-a631-41fc-8ed3-2fe2db35834d
+md"How does $\overline{\text{ECS}(B)}$ compare to $\text{ECS}(\overline{B})$?
+
+Answer: it is higher, by ~.4"
+
+# ╔═╡ 685167f8-c86f-4248-be9b-bb1a07cfcd03
+prob_ecs_b_above_ecs_mean_b = let
+	samples_above = length(filter(x -> x > ecs_of_mean_b, ECS_samples))
+	total_samples = length(ECS_samples)
+	samples_above / total_samples
+end
+
+# ╔═╡ f2957b34-71f9-4e66-904f-5712780c442d
+ md"What is the probability that $\text{ECS}(B)$ lies above $\text{ECS}(\overline{B})$?
+
+Answer = $(prob_ecs_b_above_ecs_mean_b)"
 
 # ╔═╡ 440271b6-25e8-11eb-26ce-1b80aa176aca
 md"👉 Does accounting for uncertainty in feedbacks make our expectation of global warming better (less implied warming) or worse (more implied warming)?"
 
 # ╔═╡ cf276892-25e7-11eb-38f0-03f75c90dd9e
 observations_from_the_order_of_averaging = md"""
-Hello world!
+worse (more warming)
+
+This is because the impact of changing $B$ by some value $x$ does not have as simple, symmetric impact on the value of $ECS$. Specifically, subtracting by $x$ has less impact on $ECS$ than adding $x$.
+
+Another way to see this is that, even though we are sampling from a normal distribution for $B$, the distribution we see for ECS is _not_ a normal distribution... it is skewed to the right.
 """
 
 # ╔═╡ 5b5f25f0-266c-11eb-25d4-17e411c850c9
@@ -459,12 +483,10 @@ In this simulation, we used `T0 = 14` and `CO2 = t -> 280`, which is why `T` is 
 
 # ╔═╡ 9596c2dc-2671-11eb-36b9-c1af7e5f1089
 simulated_rcp85_model = let
-	
-	missing
+	ebm = Model.EBM(14.0, 1850, 1, Model.CO2_RCP85)
+	Model.run!(ebm, 2020)
+	ebm
 end
-
-# ╔═╡ f94a1d56-2671-11eb-2cdc-810a9c7a8a5f
-
 
 # ╔═╡ 4b091fac-2672-11eb-0db8-75457788d85e
 md"""
@@ -482,9 +504,10 @@ md"""
 """
 
 # ╔═╡ f688f9f2-2671-11eb-1d71-a57c9817433f
-function temperature_response(CO2::Function, B::Float64=-1.3)
-	
-	return missing
+function temperature_response(CO2::Function, B::Float64=-1.3; end_year=2100)
+	ebm = Model.EBM(14, 1850, 1, CO2; B=B)
+	Model.run!(ebm, end_year)
+	ebm.T[end]
 end
 
 # ╔═╡ 049a866e-2672-11eb-29f7-bfea7ad8f572
@@ -524,7 +547,35 @@ We are interested in how the **uncertainty in our input** $B$ (the climate feedb
 """
 
 # ╔═╡ f2e55166-25ff-11eb-0297-796e97c62b07
+function prob_warming(model, amount_warmed, end_year)
+	
+	trb(b) = temperature_response(model, b; end_year=end_year)
+	
+	# generate outcomes from our samples
+	rcp26_outcomes = trb.(B_samples)
+	
+	# check which of those outcomes exceed the warming amount
+	gt2c_warming(temp) = temp > (14+amount_warmed) 
+	samples_exceeded = length(filter(gt2c_warming, rcp26_outcomes))
+	total_samples = length(B_samples)
+	
+	return samples_exceeded / total_samples
+end
 
+# ╔═╡ 3ccdac45-8a07-44f5-bf1b-03b3ef944100
+p_2degrees_RCP26 = prob_warming(Model.CO2_RCP26, 2, 2100)
+
+# ╔═╡ 7f05f7a9-fd01-4b0c-877c-12483a7bec90
+p_2degrees_RCP85 = prob_warming(Model.CO2_RCP85, 2, 2100)
+
+# ╔═╡ 0c260593-0679-4ab5-8110-c326dc68bd54
+md"What is the probability that we see more than 2°C of warming by 2100 under the low-emissions scenario RCP2.6? 
+
+=> $(p_2degrees_RCP26)
+
+What about under the high-emissions scenario RCP8.5?
+
+=> $(p_2degrees_RCP85)"
 
 # ╔═╡ 1ea81214-1fca-11eb-2442-7b0b448b49d6
 md"""
@@ -825,8 +876,12 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╠═3d72ab3a-2689-11eb-360d-9b3d829b78a9
 # ╟─b6d7a362-1fc8-11eb-03bc-89464b55c6fc
 # ╠═1f148d9a-1fc8-11eb-158e-9d784e390b24
-# ╟─cf8dca6c-1fc8-11eb-1f89-099e6ba53c22
+# ╠═cf8dca6c-1fc8-11eb-1f89-099e6ba53c22
 # ╠═02173c7a-2695-11eb-251c-65efb5b4a45f
+# ╠═43ee4030-c11f-4488-97a3-1b88da4d0ade
+# ╠═1f3ddc3a-a631-41fc-8ed3-2fe2db35834d
+# ╠═685167f8-c86f-4248-be9b-bb1a07cfcd03
+# ╟─f2957b34-71f9-4e66-904f-5712780c442d
 # ╟─440271b6-25e8-11eb-26ce-1b80aa176aca
 # ╠═cf276892-25e7-11eb-38f0-03f75c90dd9e
 # ╟─5b5f25f0-266c-11eb-25d4-17e411c850c9
@@ -837,7 +892,6 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╠═bfb07a0a-2670-11eb-3938-772499c637b1
 # ╟─12cbbab0-2671-11eb-2b1f-038c206e84ce
 # ╠═9596c2dc-2671-11eb-36b9-c1af7e5f1089
-# ╠═f94a1d56-2671-11eb-2cdc-810a9c7a8a5f
 # ╟─4b091fac-2672-11eb-0db8-75457788d85e
 # ╟─9cdc5f84-2671-11eb-3c78-e3495bc64d33
 # ╠═f688f9f2-2671-11eb-1d71-a57c9817433f
@@ -850,7 +904,10 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─ee1be5dc-252b-11eb-0865-291aa823b9e9
 # ╟─06c5139e-252d-11eb-2645-8b324b24c405
 # ╠═f2e55166-25ff-11eb-0297-796e97c62b07
-# ╟─1ea81214-1fca-11eb-2442-7b0b448b49d6
+# ╠═3ccdac45-8a07-44f5-bf1b-03b3ef944100
+# ╠═7f05f7a9-fd01-4b0c-877c-12483a7bec90
+# ╟─0c260593-0679-4ab5-8110-c326dc68bd54
+# ╠═1ea81214-1fca-11eb-2442-7b0b448b49d6
 # ╟─a0ef04b0-25e9-11eb-1110-cde93601f712
 # ╟─3e310cf8-25ec-11eb-07da-cb4a2c71ae34
 # ╟─d6d1b312-2543-11eb-1cb2-e5b801686ffb
