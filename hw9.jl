@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.9
+# v0.14.3
 
 using Markdown
 using InteractiveUtils
@@ -191,7 +191,7 @@ The simulation begins at the preindustrial equilibrium, i.e. a temperature $T_{0
 
 # ╔═╡ fa7e6f7e-2434-11eb-1e61-1b1858bb0988
 md"""
-``B = `` $(@bind B_slider Slider(-2.5:.001:0; show_value=true, default=-1.3))
+``B = `` $(@bind B_slider Slider(-2.5:.001:1; show_value=true, default=-1.3))
 """
 
 # ╔═╡ 16348b6a-1fc2-11eb-0b9c-65df528db2a1
@@ -206,7 +206,9 @@ md"""
 
 # ╔═╡ a86f13de-259d-11eb-3f46-1f6fb40020ce
 observations_from_changing_B = md"""
-Hello world!
+As B gets more negative, that means more resistance and a ECS of near 0. This is the "feedback",  where a more negative value has more negative feedback and dampens other effects.
+
+As B approaches 0, that means less resistance and the ECS grows unboundedly to *positive* infinity.
 """
 
 # ╔═╡ 3d66bd30-259d-11eb-2694-471fb3a4a7be
@@ -216,7 +218,11 @@ md"""
 
 # ╔═╡ 5f82dec8-259e-11eb-2f4f-4d661f44ef41
 observations_from_nonnegative_B = md"""
-Hello world!
+For $B >= 0$, the ECS grows unboundedly. 
+
+The value of ECS if B>0 is actually _negative_. This ECS value, I think, would cause us arrive in an equilibrium if temperature decreased and then we hit it.  However, the climate model causes temperatures to grow.
+
+TODO: Discuss
 """
 
 # ╔═╡ 56b68356-2601-11eb-39a9-5f4b8e580b87
@@ -233,8 +239,6 @@ end
 md"""
 👉 Create a graph to visualize ECS as a function of B. 
 """
-
-# ╔═╡ b9f882d8-266b-11eb-2998-75d6539088c7
 
 
 # ╔═╡ 269200ec-259f-11eb-353b-0b73523ef71a
@@ -295,7 +299,7 @@ let
 		size=(500,250), legend=:bottomright, 
 		title="Transient response to instant doubling of CO₂", 
 		ylabel="temperature change [°C]", xlabel="years after doubling",
-		ylim=(-.5, (isfinite(ecs) && ecs < 4) ? 4 : 10),
+		# ylim=(-.5, (isfinite(ecs) && ecs < 4) ? 4 : 10),
 	)
 	
 	plot!(p, [ebm_ECS.t[1], ebm_ECS.t[end]], ecs .* [1,1], 
@@ -304,6 +308,17 @@ let
 	plot!(p, ebm_ECS.t, ebm_ECS.T .- ebm_ECS.T[1], 
 		label="ΔT(t) = T(t) - T₀")
 end |> as_svg
+
+# ╔═╡ b9f882d8-266b-11eb-2998-75d6539088c7
+let
+	out = []
+	r = -1:.01:1
+	for b in r
+		out = append!(out, ECS(B=b))
+	end
+	plot(r, out)
+end
+	
 
 # ╔═╡ 736ed1b6-1fc2-11eb-359e-a1be0a188670
 B_samples = let
@@ -776,13 +791,13 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─1312525c-1fc0-11eb-2756-5bc3101d2260
 # ╠═c4398f9c-1fc4-11eb-0bbb-37f066c6027d
 # ╟─7f961bc0-1fc5-11eb-1f18-612aeff0d8df
-# ╟─25f92dec-1fc4-11eb-055d-f34deea81d0e
-# ╟─fa7e6f7e-2434-11eb-1e61-1b1858bb0988
+# ╠═25f92dec-1fc4-11eb-055d-f34deea81d0e
+# ╠═fa7e6f7e-2434-11eb-1e61-1b1858bb0988
 # ╟─16348b6a-1fc2-11eb-0b9c-65df528db2a1
 # ╟─e296c6e8-259c-11eb-1385-53f757f4d585
-# ╠═a86f13de-259d-11eb-3f46-1f6fb40020ce
+# ╟─a86f13de-259d-11eb-3f46-1f6fb40020ce
 # ╟─3d66bd30-259d-11eb-2694-471fb3a4a7be
-# ╠═5f82dec8-259e-11eb-2f4f-4d661f44ef41
+# ╟─5f82dec8-259e-11eb-2f4f-4d661f44ef41
 # ╟─56b68356-2601-11eb-39a9-5f4b8e580b87
 # ╟─7d815988-1fc7-11eb-322a-4509e7128ce3
 # ╟─aed8f00e-266b-11eb-156d-8bb09de0dc2b
