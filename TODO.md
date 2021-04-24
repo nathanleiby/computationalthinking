@@ -1,4 +1,11 @@
 # Discussion items:
+- HW8 extension ideas
+  - Shadows
+    - need to project on a ground surface?
+  - Point lights within the environment
+  - Non sphere shapes
+    - walls - easy, since planes extend our 2d walls
+    - spheroids, cubes, cylinders - unsure, depends on complexity of computing intersection
 - HW8
 	- still feeling some pain with auto-complete and docs.
   	- related pain made worse due to ^ is the inconsistency is annoying... hit.point vs sphere.p vs Skybox.center
