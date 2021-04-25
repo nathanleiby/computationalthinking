@@ -220,9 +220,10 @@ md"""
 observations_from_nonnegative_B = md"""
 For $B >= 0$, the ECS grows unboundedly. 
 
-The value of ECS if B>0 is actually _negative_. This ECS value, I think, would cause us arrive in an equilibrium if temperature decreased and then we hit it.  However, the climate model causes temperatures to grow.
+The value of ECS if B>0 is actually _negative_. This ECS value is NOT a physically meaningful answer, but rather an artifact of the model.
 
-TODO: Discuss
+- Both $A$ and $B$ were defined based on assumptions of pre-industrial CO2 and stable temperature of 14C
+- Also, our model's value of $A$ is not updated when we change $B$.
 """
 
 # ╔═╡ 56b68356-2601-11eb-39a9-5f4b8e580b87
@@ -884,7 +885,7 @@ TODO = html"<span style='display: inline; font-size: 2em; color: purple; font-we
 # ╟─e296c6e8-259c-11eb-1385-53f757f4d585
 # ╟─a86f13de-259d-11eb-3f46-1f6fb40020ce
 # ╟─3d66bd30-259d-11eb-2694-471fb3a4a7be
-# ╟─5f82dec8-259e-11eb-2f4f-4d661f44ef41
+# ╠═5f82dec8-259e-11eb-2f4f-4d661f44ef41
 # ╟─56b68356-2601-11eb-39a9-5f4b8e580b87
 # ╟─7d815988-1fc7-11eb-322a-4509e7128ce3
 # ╟─aed8f00e-266b-11eb-156d-8bb09de0dc2b
