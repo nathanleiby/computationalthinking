@@ -45,7 +45,7 @@ md"""
 
 student = (name = "Jazzy Doe", kerberos_id = "jazz")
 
-# you might need to wait until all other cells in this notebook have completed running. 
+# you might need to wait until all other cells in this notebook have completed running.
 # scroll around the page to see what's up
 
 # ╔═╡ 18be4f7c-2433-11eb-33cb-8d90ca6f124c
@@ -102,28 +102,28 @@ tendency(ebm) = (1. /ebm.C) * (
 begin
 	mutable struct EBM
 		T::Array{Float64, 1}
-	
+
 		t::Array{Float64, 1}
 		Δt::Float64
-	
+
 		CO2::Function
-	
+
 		C::Float64
 		a::Float64
 		A::Float64
 		B::Float64
 		CO2_PI::Float64
-	
+
 		α::Float64
 		S::Float64
 	end;
-	
+
 	# Make constant parameters optional kwargs
 	EBM(T::Array{Float64, 1}, t::Array{Float64, 1}, Δt::Real, CO2::Function;
 		C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S) = (
 		EBM(T, t, Δt, CO2, C, a, A, B, CO2_PI, α, S)
 	);
-	
+
 	# Construct from float inputs for convenience
 	EBM(T0::Real, t0::Real, Δt::Real, CO2::Function;
 		C=C, a=a, A=A, B=B, CO2_PI=CO2_PI, α=α, S=S) = (
@@ -138,7 +138,7 @@ begin
 			timestep!(ebm)
 		end
 	end;
-	
+
 	run!(ebm) = run!(ebm, 200.) # run for 200 years by default
 end
 
@@ -152,7 +152,7 @@ begin
 	CO2_RCP26(t) = CO2_PI * (1 .+ fractional_increase(t) .* min.(1., exp.(-((t .-1850.).-170)/100))) ;
 	RCP26 = EBM(T0, 1850., 1., CO2_RCP26)
 	run!(RCP26, 2100.)
-	
+
 	CO2_RCP85(t) = CO2_PI * (1 .+ fractional_increase(t) .* max.(1., exp.(((t .-1850.).-170)/100)));
 	RCP85 = EBM(T0, 1850., 1., CO2_RCP85)
 	run!(RCP85, 2100.)
@@ -218,7 +218,7 @@ md"""
 
 # ╔═╡ 5f82dec8-259e-11eb-2f4f-4d661f44ef41
 observations_from_nonnegative_B = md"""
-For $B >= 0$, the ECS grows unboundedly. 
+For $B >= 0$, the ECS grows unboundedly.
 
 The value of ECS if B>0 is actually _negative_. This ECS value is NOT a physically meaningful answer, but rather an artifact of the model.
 
@@ -238,7 +238,7 @@ end
 
 # ╔═╡ aed8f00e-266b-11eb-156d-8bb09de0dc2b
 md"""
-👉 Create a graph to visualize ECS as a function of B. 
+👉 Create a graph to visualize ECS as a function of B.
 """
 
 
@@ -247,9 +247,9 @@ md"""
 md"""
 #### Exercise 1.2 - _Doubling CO₂_
 
-To compute ECS, we doubled the CO₂ in our atmosphere. This factor 2 is not entirely arbitrary: without substantial effort to reduce CO₂ emissions, we are expected to **at least** double the CO₂ in our atmosphere by 2100. 
+To compute ECS, we doubled the CO₂ in our atmosphere. This factor 2 is not entirely arbitrary: without substantial effort to reduce CO₂ emissions, we are expected to **at least** double the CO₂ in our atmosphere by 2100.
 
-Right now, our CO₂ concentration is 415 ppm -- $(round(415 / 280, digits=3)) times the pre-industrial value of 280 ppm from 1850. 
+Right now, our CO₂ concentration is 415 ppm -- $(round(415 / 280, digits=3)) times the pre-industrial value of 280 ppm from 1850.
 
 The CO₂ concentrations in the _future_ depend on human action. There are several models for future concentrations, which are formed by assuming different _policy scenarios_. A baseline model is RCP8.5 - a "worst-case" high-emissions scenario. In our notebook, this model is given as a function of ``t``.
 """
@@ -265,7 +265,7 @@ expected_double_CO2_year = let
 	ppm = Model.CO2_RCP85.(year)
 	# assert ppm > 560
 	year
-	
+
 	# TODO: more elegant code? having trouble working with Model
 end
 
@@ -291,26 +291,26 @@ let
 	else
 		Model.CO2_PI
 	end
-	
+
 	# the definition of A depends on B, so we recalculate:
 	A = Model.S*(1. - Model.α)/4 + B_slider*Model.T0
 	# create the model
 	ebm_ECS = Model.EBM(14., -100., 1., double_CO2, A=A, B=B_slider);
 	Model.run!(ebm_ECS, 300)
-	
+
 	ecs = ECS(B=B_slider)
-	
+
 	p = plot(
-		size=(500,250), legend=:bottomright, 
-		title="Transient response to instant doubling of CO₂", 
+		size=(500,250), legend=:bottomright,
+		title="Transient response to instant doubling of CO₂",
 		ylabel="temperature change [°C]", xlabel="years after doubling",
 		ylim=(-.5, (isfinite(ecs) && ecs < 4) ? 4 : 10),
 	)
-	
-	plot!(p, [ebm_ECS.t[1], ebm_ECS.t[end]], ecs .* [1,1], 
+
+	plot!(p, [ebm_ECS.t[1], ebm_ECS.t[end]], ecs .* [1,1],
 		ls=:dash, color=:darkred, label="ECS")
-	
-	plot!(p, ebm_ECS.t, ebm_ECS.T .- ebm_ECS.T[1], 
+
+	plot!(p, ebm_ECS.t, ebm_ECS.T .- ebm_ECS.T[1],
 		label="ΔT(t) = T(t) - T₀")
 end |> as_svg
 
@@ -323,16 +323,16 @@ let
 	end
 	plot(r, out,
 			ls=:dash, color=:darkred, label="ECS",
-			title="ECS as func of B", 
+			title="ECS as func of B",
 			ylabel="ECS", xlabel="B")
 end
-	
+
 
 # ╔═╡ 736ed1b6-1fc2-11eb-359e-a1be0a188670
 B_samples = let
 	B_distribution = Normal(B̅, σ)
 	Nsamples = 5000
-	
+
 	samples = rand(B_distribution, Nsamples)
 	# we only sample negative values of B
 	filter(x -> x < 0, samples)
@@ -348,8 +348,7 @@ md"""
 
 # ╔═╡ 3d72ab3a-2689-11eb-360d-9b3d829b78a9
 ECS_samples = let
-	ecs(b) = ECS(B=b)
-	ecs.(B_samples)
+	ECS.(B=B_samples)
 end
 
 # ╔═╡ b6d7a362-1fc8-11eb-03bc-89464b55c6fc
@@ -359,7 +358,7 @@ md"**Answer:**"
 histogram(ECS_samples, size=(600, 250), label=nothing, xlabel="ECS", ylabel="samples", xlim=(0,10))
 
 # ╔═╡ cf8dca6c-1fc8-11eb-1f89-099e6ba53c22
-md"It looks like the ECS distribution is **not normally distributed**, even though $B$ is. 
+md"It looks like the ECS distribution is **not normally distributed**, even though $B$ is.
 
 👉 How does $\overline{\text{ECS}(B)}$ compare to $\text{ECS}(\overline{B})$? What is the probability that $\text{ECS}(B)$ lies above $\text{ECS}(\overline{B})$?
 "
@@ -397,6 +396,12 @@ worse (more warming)
 This is because the impact of changing $B$ by some value $x$ does not have as simple, symmetric impact on the value of $ECS$. Specifically, subtracting by $x$ has less impact on $ECS$ than adding $x$.
 
 Another way to see this is that, even though we are sampling from a normal distribution for $B$, the distribution we see for ECS is _not_ a normal distribution... it is skewed to the right.
+
+--
+
+Other ways to think about it:
+- if you are composing functions and either is non-linear, then the order of the composition matters! i.e. $f \circ g \neq g \circ f$
+- Jensen's inequality (https://en.wikipedia.org/wiki/Jensen%27s_inequality) explains the direction of the error here. You are making an estimate for a concave/convex function.
 """
 
 # ╔═╡ 5b5f25f0-266c-11eb-25d4-17e411c850c9
@@ -530,7 +535,7 @@ We talked about two _emissions scenarios_: RCP2.6 (strong mitigation - controlle
 t = 1850:2100
 
 # ╔═╡ e10a9b70-25a0-11eb-2aed-17ed8221c208
-plot(t, Model.CO2_RCP85.(t), 
+plot(t, Model.CO2_RCP85.(t),
 	ylim=(0,1200), ylabel="CO2 concentration [ppm]")
 
 # ╔═╡ 40f1e7d8-252d-11eb-0549-49ca4e806e16
@@ -551,15 +556,15 @@ We are interested in how the **uncertainty in our input** $B$ (the climate feedb
 function prob_warming(model, amount_warmed, end_year)
 	# helper fn so we can broadcast
 	trb(b) = temperature_response(model, b; end_year=end_year)
-	
+
 	# generate outcomes from our samples
 	rcp26_outcomes = trb.(B_samples)
-	
+
 	# check which of those outcomes exceed the warming amount
-	gt2c_warming(temp) = temp > (14+amount_warmed) 
+	gt2c_warming(temp) = temp > (14+amount_warmed)
 	samples_exceeded = length(filter(gt2c_warming, rcp26_outcomes))
 	total_samples = length(B_samples)
-	
+
 	return samples_exceeded / total_samples
 end
 
@@ -570,7 +575,7 @@ p_2degrees_RCP26 = prob_warming(Model.CO2_RCP26, 2, 2100)
 p_2degrees_RCP85 = prob_warming(Model.CO2_RCP85, 2, 2100)
 
 # ╔═╡ 0c260593-0679-4ab5-8110-c326dc68bd54
-md"What is the probability that we see more than 2°C of warming by 2100 under the low-emissions scenario RCP2.6? 
+md"What is the probability that we see more than 2°C of warming by 2100 under the low-emissions scenario RCP2.6?
 
 => $(p_2degrees_RCP26)
 
@@ -613,42 +618,42 @@ We used two helper functions:
 
 # ╔═╡ 68b2a560-2536-11eb-0cc4-27793b4d6a70
 function add_cold_hot_areas!(p)
-	
+
 	left, right = xlims(p)
-	
-	plot!(p, 
-		[left, right], [-60, -60], 
+
+	plot!(p,
+		[left, right], [-60, -60],
 		fillrange=[-10., -10.], fillalpha=0.3, c=:lightblue, label=nothing
 	)
-	annotate!(p, 
-		left+12, -19, 
+	annotate!(p,
+		left+12, -19,
 		text("completely\nfrozen", 10, :darkblue, :left)
 	)
-	
-	plot!(p, 
-		[left, right], [10, 10], 
+
+	plot!(p,
+		[left, right], [10, 10],
 		fillrange=[80., 80.], fillalpha=0.09, c=:red, lw=0., label=nothing
 	)
 	annotate!(p,
-		left+12, 15, 
+		left+12, 15,
 		text("no ice", 10, :darkred, :left)
 	)
 end
 
 # ╔═╡ 0e19f82e-2685-11eb-2e99-0d094c1aa520
 function add_reference_points!(p)
-	plot!(p, 
-		[Model.CO2_PI, Model.CO2_PI], [-55, 75], 
-		color=:grey, alpha=0.3, lw=8, 
+	plot!(p,
+		[Model.CO2_PI, Model.CO2_PI], [-55, 75],
+		color=:grey, alpha=0.3, lw=8,
 		label="Pre-industrial CO2"
 	)
-	plot!(p, 
-		[Model.CO2_PI], [Model.T0], 
+	plot!(p,
+		[Model.CO2_PI], [Model.T0],
 		shape=:circle, color=:orange, markersize=8,
 		label="Our preindustrial climate"
 	)
 	plot!(p,
-		[Model.CO2_PI], [-38.3], 
+		[Model.CO2_PI], [-38.3],
 		shape=:circle, color=:aqua, markersize=8,
 		label="Alternate preindustrial climate"
 	)
@@ -656,7 +661,7 @@ end
 
 # ╔═╡ 1eabe908-268b-11eb-329b-b35160ec951e
 md"""
-👉 Create a slider for `CO2` between `CO2min` and `CO2max`. Just like the horizontal axis of our plot, we want the slider to be _logarithmic_. 
+👉 Create a slider for `CO2` between `CO2min` and `CO2max`. Just like the horizontal axis of our plot, we want the slider to be _logarithmic_.
 """
 
 # ╔═╡ 1d388372-2695-11eb-3068-7b28a2ccb9ac
@@ -680,7 +685,7 @@ function step_model!(ebm::Model.EBM, new_CO2::Real)
 	ebm.T = [ebm.T[end]]
 	ebm.CO2 = t -> new_CO2
 	Model.run!(ebm)
-	
+
 	return ebm
 end
 
@@ -709,29 +714,29 @@ ebm = Model.EBM(Tneo, 0., 5., Model.CO2_const) # TODO: Discuss that I had to re-
 # ╔═╡ 378aed18-252b-11eb-0b37-a3b511af2cb5
 let
 	p = plot(
-		xlims=(CO2min, CO2max), ylims=(-55, 75), 
+		xlims=(CO2min, CO2max), ylims=(-55, 75),
 		xaxis=:log,
-		xlabel="CO2 concentration [ppm]", 
+		xlabel="CO2 concentration [ppm]",
 		ylabel="Global temperature T [°C]",
 		title="Earth's CO2 concentration bifurcation diagram",
 		legend=:topleft
 	)
-	
+
 	add_cold_hot_areas!(p)
 	add_reference_points!(p)
-	
+
 	# your code here
 	step_model!(ebm, CO2)
-	
-	# you could add a trail behind the black dot, or you could plot the stable and unstable branches. It's up to you! 
-	
-	plot!(p, 
+
+	# you could add a trail behind the black dot, or you could plot the stable and unstable branches. It's up to you!
+
+	plot!(p,
 		[ebm.CO2(ebm.t[end])], [ebm.T[end]],
 		label=nothing,
 		color=:black,
 		shape=:circle,
 	)
-	
+
 end |> as_svg
 
 # ╔═╡ c78e02b4-268a-11eb-0af7-f7c7620fcc34
@@ -759,7 +764,7 @@ end
 
 # ╔═╡ 9c1f73e0-268a-11eb-2bf1-216a5d869568
 md"""
-If you like, make the visualization more informative! Like in the lecture notebook, you could add a trail behind the black dot, or you could plot the stable and unstable branches. It's up to you! 
+If you like, make the visualization more informative! Like in the lecture notebook, you could add a trail behind the black dot, or you could plot the stable and unstable branches. It's up to you!
 """
 
 # ╔═╡ 11096250-2544-11eb-057b-d7112f20b05c
@@ -773,10 +778,10 @@ md"""
 co2_to_melt_snowball = let
 	# start condition
 	ebm = Model.EBM(Tneo, 0., 5., Model.CO2_const)
-	
+
 	# target temp (when fully melted)
 	target_temp = 10
-	
+
 	# run simulations until we exceed target temp
 	CO2_powers = 1:0.1:6
 	end_CO2 = missing
@@ -784,11 +789,11 @@ co2_to_melt_snowball = let
 		new_CO2 = 10^val
 		ebm = step_model!(ebm, new_CO2)
 		if ebm.T[end] > target_temp
-			end_CO2 = new_CO2 
+			end_CO2 = new_CO2
 			break
 		end
 	end
-	
+
 	end_CO2
 end
 
