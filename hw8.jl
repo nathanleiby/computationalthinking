@@ -251,7 +251,8 @@ function refract(ray::Photon, hit::Intersection{Sphere})::Photon
 	# new ior depends on whether we're entering or exiting object
 	# if the ray has an ior of 1, we know it's currently outside an object
 	new_ior = old_ior == 1 ? hit.object.s.ior : 1
-
+	# TODO: what if two overlapping or tangent spheres?.. this doesn't really work
+	
 	new_l = refract(ray.l, n, old_ior, new_ior)
 	
 	Photon(hit.point, new_l, ray.c, new_ior)
@@ -510,15 +511,7 @@ end
 # ╔═╡ 0cbe4446-8f38-11eb-0e01-3f8980dbf396
 begin
 	function interact(ray::Photon, hit::Intersection{Sphere}, num_intersections::Int, objects::Any)
-		
 		stopped = zeros(length(ray.l))
-		# TODO: Refraction
-		# new_ior = ray.ior / hit.object.s.ior
-
-		# split into up to 3 rays
-		
-		# reflected_ray
-		
 
 		if typeof(hit.object) == SkyBox
 			return Photon(hit.point, ray.l, hit.object.s.c, ray.ior)
@@ -541,18 +534,10 @@ begin
 				refracted_ray = step_ray(refract(ray, hit), objects, num_intersections - 1)
 			end
 
-			# WARNING: These line breaks don't behave the way I expected :(
-			# TODO: why
-# 			final_color = color_ray.c * hit.object.s.c.alpha 
-# 				+ reflected_ray.c * hit.object.s.r 
-# 				+ refracted_ray.c * hit.object.s.t
-		
-			# THIS WORKS tho
 			final_color = color_ray.c * hit.object.s.c.alpha +  
 				 reflected_ray.c * hit.object.s.r +
 				 refracted_ray.c * hit.object.s.t
 
-			
 			return Photon(r.p, stopped, final_color, r.ior)
 		else
 			error(hit.object)
@@ -576,7 +561,6 @@ function ray_trace(objects::Vector{O}, cam::Camera;
 				   num_intersections = 10) where {O <: Object}
 	rays = init_rays(cam)
 
-	# TODO: Support splitting into multiple
 	new_rays = step_ray.(rays, [objects], [num_intersections])
 
 	extract_colors(new_rays)
@@ -1134,7 +1118,7 @@ TODO_note(text) = Markdown.MD(Markdown.Admonition("warning", "TODO note", [text]
 # ╟─dc36ceaa-205c-11eb-169c-bb4c36aaec9f
 # ╠═43306bd4-194d-11eb-2e30-07eabb8b29ef
 # ╠═022f624a-8f4d-11eb-164e-af89b01f6281
-# ╠═14dc73d2-1a0d-11eb-1a3c-0f793e74da9b
+# ╟─14dc73d2-1a0d-11eb-1a3c-0f793e74da9b
 # ╠═daf08b60-8f4e-11eb-2543-63354147ee7c
 # ╟─7f0bf286-2071-11eb-0cac-6d10c93bab6c
 # ╠═8a4e888c-1ef7-11eb-2a52-17db130458a5
