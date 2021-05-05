@@ -476,7 +476,10 @@ ocean_sim = let
 	u, v = ocean_velocities
 	model = OceanModel(default_grid, P, u*2. ^U_ex, v*2. ^U_ex)
 	
+	# Doubling experiments
 	Δt = 12*60*60
+	Δt *= 2^7
+	
 	ClimateModelSimulation(model, copy(ocean_T_init), Δt)
 end;
 
@@ -494,13 +497,13 @@ md"""
 
 # ╔═╡ b952d290-2db7-11eb-3fa9-2bc8d77b9fd6
 numerical_parameters_observation = md"""
-Numerical parameters include: $N$ (the number of grid points per dimension), $\Delta t$ (the size of a timestamp), and $iterations$ (the number of timesteps to do).
+Numerical parameters include: $N$ (the number of grid points per dimension) and $\Delta t$ (the size of a timestamp)
 
-Increasing $N$ or iterations maks the computation slower. Increasing $N$ will definitely improve the accuracy. 
+Increasing $N$ makes the computation slower, but improves the accuracy. 
 
-Increasing $iterations$ may improve the accuracy; it depends if we've done enough steps for the solution to converge yet. 
+NOTE: You can also think of incrasing $n$ as decreasing $\Delta x$ and $\Delta y$ ("step size" in 2D). Generally, decreasing the step size will make us more accurate.
 
-Increasing $\Delta t$ will cause the solution to converge faster, but be less accurate.
+Increasing $\Delta t$ will cause the solution to run faster, but be less accurate.
 """
 
 # ╔═╡ 88c56350-2c08-11eb-14e9-77e71d749e6d
@@ -540,19 +543,10 @@ For constant ``M``, we want to verify that $\text{runtime} = \mathcal{O}(N_{x}^{
 
 """
 
-# ╔═╡ 126bffce-2d0b-11eb-2bfd-bb5d1ad1169b
-function runtime(N)
-	
-	return missing
-end
-
 # ╔═╡ 923af680-2d0b-11eb-3f6a-db4bf29bb6a9
 md"""
 👉 Call your `runtime` function on a range of values for `N`, and use a plot to demonstrate that the predicted runtime complexity holds.
 """
-
-# ╔═╡ af02d23e-2e93-11eb-3547-85d2aa07081b
-
 
 # ╔═╡ a6811db2-2cdf-11eb-0aac-b1bf7b7d99eb
 md"""
@@ -567,9 +561,7 @@ In Exercise 1, look for the definition of `Δt`. It is currently set to `12*60*6
 
 # ╔═╡ 87de1c70-2d0c-11eb-2c22-f76eeca58f33
 Δt_doubling_observations = md"""
-
-Hi!
-
+Around $Δt = 2^8 * 12 * 60 * 60$, we begin seeing the strange outcome that the grid looks like a checkerboard, of alternating white and yellow.
 """
 
 # ╔═╡ 87e59680-2d0c-11eb-03c7-1d845ca6a1a5
@@ -605,6 +597,13 @@ ocean_sim.Δt, 0.1 * CFL_advection(ocean_sim.model)
 md"""
 👉 Using the interactive simulation of Exercise 1, verify that the CFL condition is (somewhat) true. Increase the magnitude of ``\vec{u}`` until you start to see numerical artefacts. Now, halve the value fo ``\Delta t``, and again, increase the magnitude of ``\vec{u}``. You should find that _halving ``\Delta t`` allows for twice the velocity magnitude_. The same link exists between ``\Delta t`` and ``\Delta x``.
 """
+
+# ╔═╡ 8a0675e2-77de-479d-aa99-f846170ce061
+md"TODO: I was NOT able to validate this above
+
+Cool tho:
+> In other words, the timestep can not be thought of as fixed – it depends on the spatial resolution
+"
 
 # ╔═╡ cb3e2990-2e67-11eb-2312-61395c479a15
 md"""
@@ -649,8 +648,14 @@ Present-day simulations have a grid spacing of $\Delta x = 30$ km (or about $N_{
 
 # ╔═╡ 299d5540-2e6a-11eb-2698-05e889127454
 cloud_resolution_possible_at = let
+	current_N = 700
+	desired_N = 40000 
+	resolution_doublings_needed = log(desired_N / current_N)
 	
-	missing
+	# to increase the resolution of the models by a factor of 2, the model's run-time increases by a factor of 16.
+	computational_complexity_increase = 16 ^ resolution_doublings_needed
+	
+	years_via_moores_law = log(computational_complexity_increase)
 end
 
 # ╔═╡ 545cf530-2b48-11eb-378c-3f8eeb89bcba
@@ -902,6 +907,28 @@ function timestep!(sim::ClimateModelSimulation{RadiationOceanModel})
 	sim.T .+= sim.Δt*tendencies
 	
 	sim.iteration += 1
+end
+
+# ╔═╡ 126bffce-2d0b-11eb-2bfd-bb5d1ad1169b
+# NIT: runtime, not model_runtime
+function runtime(N)
+	L = 6000.0e3
+	g = Grid(N, L)
+	om = OceanModel(g)
+	
+	T = constantT(g; value=0)
+	Δt = 12 * 60 * 60 # 12 hours
+	sim = ClimateModelSimulation(om, copy(T), Δt)
+	
+	duration = @elapsed timestep!(sim)
+
+	return duration
+end
+
+# ╔═╡ af02d23e-2e93-11eb-3547-85d2aa07081b
+let
+	Ns = 1:5:150
+	plot(Ns, runtime.(Ns))
 end
 
 # ╔═╡ ad95c4e0-2b4a-11eb-3584-dda89970ffdf
@@ -1324,6 +1351,7 @@ todo(text) = HTML("""<div
 # ╠═ad7b7ed6-2a9c-11eb-06b7-0f5595167575
 # ╠═7d3bf550-2e68-11eb-3526-cda9ff3f914e
 # ╟─3e908bf0-2e94-11eb-28de-a3b1b7435492
+# ╟─8a0675e2-77de-479d-aa99-f846170ce061
 # ╟─cb3e2990-2e67-11eb-2312-61395c479a15
 # ╟─433a9c1e-2ce0-11eb-319c-e9c785b080ce
 # ╟─213f65ce-2ce1-11eb-19d6-5bf5c24d7ed7
