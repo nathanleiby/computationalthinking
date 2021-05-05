@@ -476,9 +476,10 @@ ocean_sim = let
 	u, v = ocean_velocities
 	model = OceanModel(default_grid, P, u*2. ^U_ex, v*2. ^U_ex)
 	
-	# Doubling experiments
+	
 	Δt = 12*60*60
-	Δt *= 2^7
+	# Doubling experiments
+	# Δt *= 2^7
 	
 	ClimateModelSimulation(model, copy(ocean_T_init), Δt)
 end;
@@ -704,6 +705,7 @@ Below we define two new types: `RadiationOceanModel` and `RadiationOceanModelPar
 """
 
 # ╔═╡ 57535c60-2b49-11eb-07cc-ffc5b4d1f13c
+# useful! Base.@kwdef
 Base.@kwdef struct RadiationOceanModelParameters
 	κ::Float64=4.e4
 	
@@ -803,6 +805,9 @@ Just like the albedo, every grid cell will have a local amount of solar insolati
 
 """
 
+# ╔═╡ b824d767-fbd4-4bb1-9c30-a3c4d7c9d265
+default_grid
+
 # ╔═╡ 71f531ae-2dbf-11eb-1d0c-0758eb89bf1d
 md"""
 _Note that latitude is the horizontal axis in this graph, not the vertical._
@@ -814,6 +819,8 @@ function y_to_lat(y::Real; grid::Grid)
 end
 
 # ╔═╡ 2ace4750-2dbe-11eb-0074-0f3a7a929176
+# what values of y are expected?
+# I think they are the actual values of grid.y, which seem to be in kilometers
 function S_at(y::Float64; grid::Grid, S_mean::Float64)
 	S_mean .* (1+0.5*cos(2 * y_to_lat(y; grid=grid)))
 end
@@ -848,8 +855,19 @@ md"""
 
 # ╔═╡ f24e8570-2e6c-11eb-2c21-d319af7cba81
 function absorbed_solar_radiation(T::Array{Float64,2}, model::RadiationOceanModel)
+	# get albedo value for each coord
+	albedos = α.(T; α0=model.params.α0, αi=model.params.αi, ΔT=model.params.ΔT)
+	# get solar insolation
+	s_by_y = S_at.(model.grid.y[:]; model.grid, model.params.S_mean)
 	
-	return missing
+	# merge the two to compute 
+	absorbed_radation_per_sq_meter = albedos .* s_by_y 
+	
+	# TODO: does this need to be aware of m^2 scaling
+	square_size = (model.grid.Δx * model.grid.Δy)
+	
+	return absorbed_radation_per_sq_meter .* (square_size) 
+	# return absorbed_radation_per_sq_meter
 end
 
 # ╔═╡ de7456c0-2b4b-11eb-13c8-01b196821de4
@@ -871,8 +889,8 @@ md"""
 
 # ╔═╡ fc55f710-2e6c-11eb-3cea-cfc00c02fc26
 function outgoing_thermal_radiation(T::Array{Float64,2}, model::RadiationOceanModel)
-	
-	return missing
+	# TODO: does this need to be aware of m^2 scaling
+	outgoing_thermal_radiation.(T; C=model.params.C, model.params.A, model.params.B)
 end
 
 # ╔═╡ 6c20ca1e-2b48-11eb-1c3c-418118408c4c
@@ -887,6 +905,30 @@ let
 		size=(500,250)
 	)
 end
+
+# ╔═╡ ba538d92-c155-4f79-952f-1da7a398e9ef
+a = zeros((2,3))
+
+# ╔═╡ ded45e70-76af-4fe8-a35d-3575fd87e5d6
+a[1,2] = 5
+
+# ╔═╡ 2bb1aa23-68e6-4ac9-9d72-bb192bc74d46
+a
+
+# ╔═╡ 921bdbb5-4e3c-498d-85d6-f6eaf4175389
+size(a)
+
+# ╔═╡ ab36a3c1-c8e5-44d7-923f-9b2b7d4a1eab
+axes(a)
+
+# ╔═╡ 309f26ee-c825-45b2-873d-5c4e25d9cea2
+collect(enumerate(a))
+
+# ╔═╡ 24670771-8ba4-45c5-920d-a5d7859559ac
+a[CartesianIndex(1,1)]
+
+# ╔═╡ c25b5549-2143-4025-896e-ccae245d8589
+a[CartesianIndex(1,2)]
 
 # ╔═╡ fe492480-2b4b-11eb-050e-9b9b2e2bf50f
 md"""
@@ -903,6 +945,12 @@ function timestep!(sim::ClimateModelSimulation{RadiationOceanModel})
 		diffuse(sim.T, sim.model) .+ 
 		absorbed_solar_radiation(sim.T, sim.model) .- 
 		outgoing_thermal_radiation(sim.T, sim.model)
+	
+	# TODO: revisit  3.2
+	# tendencies = 
+	# 	advect(sim.T, sim.model) .+ 
+	# 	diffuse(sim.T, sim.model) .-
+	# 	outgoing_thermal_radiation(sim.T, sim.model)
 	
 	sim.T .+= sim.Δt*tendencies
 	
@@ -941,21 +989,26 @@ radiation_sim = let
 	grid = Grid(10, 6.e6)
 	# you can specify non-default parameters like so:
 	# params = RadiationOceanModelParameters(S_mean=1500, A=210, κ=2e4)
-	params = RadiationOceanModelParameters()
+	params = RadiationOceanModelParameters(S_mean=10, A=5000, κ=2e4)
+	# params = RadiationOceanModelParameters()
 	
 	u, v = DoubleGyre(grid)
 	
-	T_init_value = 10
-	T_init = constantT(grid; value=T_init_value)
+	# T_init_value = 10
+	# T_init = constantT(grid; value=T_init_value)
+	T_init = copy(ocean_T_init)
 	
 	model = RadiationOceanModel(grid, params, u, v)
-	Δt = 400*60*60
+	Δt = 40*60*60
 	
 	ClimateModelSimulation(model, copy(T_init), Δt)
 end
 
 # ╔═╡ 5fd346d0-2b4d-11eb-066b-9ba9c9d97613
 @bind go_radiation Clock(.1)
+
+# ╔═╡ 53247f37-ea5b-4f5f-bdc0-a0819dc47005
+show_anomaly_toggle = true
 
 # ╔═╡ 6fc5b760-2e97-11eb-1d7f-0d666b0a41d5
 md"""
@@ -1220,6 +1273,7 @@ let
 		timestep!(radiation_sim)
 	end
 	plot_state(radiation_sim; clims=(-0,50))
+	# plot_state(radiation_sim; clims=(-0,50), show_anomaly=show_anomaly_toggle, IC=copy(ocean_T_init))
 end
 
 # ╔═╡ 57e264a0-2c07-11eb-0e31-2b8fa01be2d1
@@ -1370,8 +1424,9 @@ todo(text) = HTML("""<div
 # ╟─287395d0-2dbb-11eb-3ca7-ddcea24a074f
 # ╠═d63c5fe0-2b49-11eb-07fd-a7ec98af3a89
 # ╟─8d729390-2dbc-11eb-0628-f3ed9c9f5ffd
+# ╠═b824d767-fbd4-4bb1-9c30-a3c4d7c9d265
 # ╠═2ace4750-2dbe-11eb-0074-0f3a7a929176
-# ╟─5caa4172-2dbe-11eb-2d5a-f5fa621d21a8
+# ╠═5caa4172-2dbe-11eb-2d5a-f5fa621d21a8
 # ╟─71f531ae-2dbf-11eb-1d0c-0758eb89bf1d
 # ╟─0de643d0-2dbf-11eb-3a4c-538c176923f4
 # ╟─86a004ce-2dd5-11eb-1dca-5702d793ef39
@@ -1381,12 +1436,21 @@ todo(text) = HTML("""<div
 # ╟─6c20ca1e-2b48-11eb-1c3c-418118408c4c
 # ╟─2274f6b0-2dc5-11eb-10a1-e980bd461ea0
 # ╠═fc55f710-2e6c-11eb-3cea-cfc00c02fc26
+# ╠═ba538d92-c155-4f79-952f-1da7a398e9ef
+# ╠═ded45e70-76af-4fe8-a35d-3575fd87e5d6
+# ╠═2bb1aa23-68e6-4ac9-9d72-bb192bc74d46
+# ╠═921bdbb5-4e3c-498d-85d6-f6eaf4175389
+# ╠═ab36a3c1-c8e5-44d7-923f-9b2b7d4a1eab
+# ╠═309f26ee-c825-45b2-873d-5c4e25d9cea2
+# ╠═24670771-8ba4-45c5-920d-a5d7859559ac
+# ╠═c25b5549-2143-4025-896e-ccae245d8589
 # ╟─fe492480-2b4b-11eb-050e-9b9b2e2bf50f
 # ╠═068795ee-2b4c-11eb-3e58-353eb8978c1c
 # ╟─ad95c4e0-2b4a-11eb-3584-dda89970ffdf
 # ╠═b059c6e0-2b4a-11eb-216a-39bb43c7b423
 # ╟─5fd346d0-2b4d-11eb-066b-9ba9c9d97613
-# ╟─6568b850-2b4d-11eb-02e9-696654ac2d37
+# ╠═53247f37-ea5b-4f5f-bdc0-a0819dc47005
+# ╠═6568b850-2b4d-11eb-02e9-696654ac2d37
 # ╟─6fc5b760-2e97-11eb-1d7f-0d666b0a41d5
 # ╟─5a755e00-2e98-11eb-0f83-997a60409484
 # ╠═5294aad0-2d15-11eb-091d-59d7517c4dc2
