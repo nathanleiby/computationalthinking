@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.21
+# v0.14.3
 
 using Markdown
 using InteractiveUtils
@@ -400,11 +400,6 @@ function PointVortex(G; Ω=1., a=0.2, x0=0.5, y0=0.)
 	return u,v
 end
 
-# ╔═╡ 1dd3fc70-2c06-11eb-27fe-f325ca208504
-# ocean_velocities = zeros(default_grid), zeros(default_grid);
-ocean_velocities = PointVortex(default_grid, Ω=0.5);
-# ocean_velocities = DoubleGyre(default_grid);
-
 # ╔═╡ bb084ace-12e2-11eb-2dfc-111e90eabfdd
 md"""##### Quasi-realistic ocean velocity field $\vec{u} = (u, v)$
 Our velocity field is given by an analytical solution to the classic wind-driven gyre
@@ -439,6 +434,11 @@ function DoubleGyre(G; β=2e-11, τ₀=0.1, ρ₀=1.e3, ν=1.e5, κ=1.e5, H=1000
 	
 	return u, v
 end
+
+# ╔═╡ 1dd3fc70-2c06-11eb-27fe-f325ca208504
+# ocean_velocities = zeros(default_grid), zeros(default_grid);
+# ocean_velocities = PointVortex(default_grid, Ω=0.5);
+ocean_velocities = DoubleGyre(default_grid);
 
 # ╔═╡ e59d869c-2a88-11eb-2511-5d5b4b380b80
 md"""
@@ -494,8 +494,13 @@ md"""
 
 # ╔═╡ b952d290-2db7-11eb-3fa9-2bc8d77b9fd6
 numerical_parameters_observation = md"""
+Numerical parameters include: $N$ (the number of grid points per dimension), $\Delta t$ (the size of a timestamp), and $iterations$ (the number of timesteps to do).
 
-Hello!
+Increasing $N$ or iterations maks the computation slower. Increasing $N$ will definitely improve the accuracy. 
+
+Increasing $iterations$ may improve the accuracy; it depends if we've done enough steps for the solution to converge yet. 
+
+Increasing $\Delta t$ will cause the solution to converge faster, but be less accurate.
 """
 
 # ╔═╡ 88c56350-2c08-11eb-14e9-77e71d749e6d
