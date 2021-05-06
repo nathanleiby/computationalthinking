@@ -988,15 +988,20 @@ radiation_sim = let
 	# params = RadiationOceanModelParameters(S_mean=1500, A=210, κ=2e4)
 	# params = RadiationOceanModelParameters(S_mean=10, A=5000, κ=2e4)
 	params = RadiationOceanModelParameters()
+	T_init_value = 10
+	
+	## 3.4: Stable state problems
+	params = RadiationOceanModelParameters(S_mean=2000)
+	T_init_value = -200
 	
 	u, v = DoubleGyre(grid)
 	
-	T_init_value = 10
+	
 	T_init = constantT(grid; value=T_init_value)
 	# T_init = copy(ocean_T_init)
 	
 	model = RadiationOceanModel(grid, params, u, v)
-	Δt = 40*60*60
+	Δt = 400*60*60
 	
 	ClimateModelSimulation(model, copy(T_init), Δt)
 end
@@ -1026,8 +1031,24 @@ But let's see what happens when we initialize with extremely high or low initial
 # ╔═╡ 5294aad0-2d15-11eb-091d-59d7517c4dc2
 S_1380_stable_states = md"""
 
+
 I found ...
 
+For $S=130$ and `T_init_value=-200` ... After 80K days, the temperature stabilizes around -42.1°C.
+
+For $S=130$ and `T_init_value=-50` ... After 50K days, the temperature stabilizes around -42.1°C.
+
+For $S=130$ and `T_init_value=-10` ... After 75K days, the temperature stabilizes around -42.1°C.
+
+---
+
+For $S=130$ and `T_init_value=+50` ... After 75K days, the temperature stabilizes around +24.2°C.
+
+For $S=130$ and `T_init_value=+55` ... After 75K days, the temperature stabilizes around +24.2°C.
+
+For $S=130$ and `T_init_value=+200` ... After 75K days, the temperature stabilizes around +24.2°C.
+
+→ found **2** stable states
 """
 
 # ╔═╡ abd2475e-2d15-11eb-26dc-05253cf65232
@@ -1040,12 +1061,27 @@ S_1000_stable_states = md"""
 
 I found ...
 
+
+For $S=1000$ and `T_init_value=-200` ... After 100K days, the temperature stabilizes around -75°C.
+
+For $S=1000$ and `T_init_value=-10` ... After 100K days, the temperature stabilizes around -75°C.
+
+For $S=1000$ and `T_init_value=+200` ... After 100K days, the temperature stabilizes around -75°C.
+
+→ found **1** stable state
+
 """
 
 # ╔═╡ bed2c7e0-2d15-11eb-14e3-93f5d1b6f3a1
 S_2000_stable_states = md"""
-
 I found ...
+
+For $S=2000$ and `T_init_value=-200` ... After 100K days, the temperature stabilizes around +108°C.
+
+For $S=2000$ and `T_init_value=+200` ... After 100K days, the temperature stabilizes around +108°C.
+
+→ found **1** stable state
+
 
 """
 
@@ -1450,9 +1486,9 @@ todo(text) = HTML("""<div
 # ╠═6568b850-2b4d-11eb-02e9-696654ac2d37
 # ╟─6fc5b760-2e97-11eb-1d7f-0d666b0a41d5
 # ╟─5a755e00-2e98-11eb-0f83-997a60409484
-# ╠═5294aad0-2d15-11eb-091d-59d7517c4dc2
+# ╟─5294aad0-2d15-11eb-091d-59d7517c4dc2
 # ╟─abd2475e-2d15-11eb-26dc-05253cf65232
-# ╠═bdd86250-2d15-11eb-0b62-7903ca714312
+# ╟─bdd86250-2d15-11eb-0b62-7903ca714312
 # ╠═bed2c7e0-2d15-11eb-14e3-93f5d1b6f3a1
 # ╟─b5703af0-2e98-11eb-1e8c-3d2b51bd9995
 # ╠═d9141ca0-2e99-11eb-3ef6-8591c16bb546
