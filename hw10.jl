@@ -502,7 +502,7 @@ Numerical parameters include: $N$ (the number of grid points per dimension) and 
 
 Increasing $N$ makes the computation slower, but improves the accuracy. 
 
-NOTE: You can also think of incrasing $n$ as decreasing $\Delta x$ and $\Delta y$ ("step size" in 2D). Generally, decreasing the step size will make us more accurate.
+NOTE: You can also think of increasing $N$ as decreasing $\Delta x$ and $\Delta y$ ("step size" in 2D). Decreasing the step size means we're working on a finer grid and will be more accurate.
 
 Increasing $\Delta t$ will cause the solution to run faster, but be less accurate.
 """
@@ -855,19 +855,15 @@ md"""
 
 # ╔═╡ f24e8570-2e6c-11eb-2c21-d319af7cba81
 function absorbed_solar_radiation(T::Array{Float64,2}, model::RadiationOceanModel)
+	# trying to implement this equation:
+	# 	S(x,y) * (1 - α(T)) / (4*C)
+	
 	# get albedo value for each coord
-	albedos = α.(T; α0=model.params.α0, αi=model.params.αi, ΔT=model.params.ΔT)
+	αₜ = α.(T; α0=model.params.α0, αi=model.params.αi, ΔT=model.params.ΔT)
 	# get solar insolation
-	s_by_y = S_at.(model.grid.y[:]; model.grid, model.params.S_mean)
+	S = S_at.(model.grid.y[:]; model.grid, model.params.S_mean)
 	
-	# merge the two to compute 
-	absorbed_radation_per_sq_meter = albedos .* s_by_y 
-	
-	# TODO: does this need to be aware of m^2 scaling
-	square_size = (model.grid.Δx * model.grid.Δy)
-	
-	return absorbed_radation_per_sq_meter .* (square_size) 
-	# return absorbed_radation_per_sq_meter
+	return S .* (1 .- αₜ) ./ (4*model.params.C)
 end
 
 # ╔═╡ de7456c0-2b4b-11eb-13c8-01b196821de4
@@ -975,7 +971,8 @@ end
 
 # ╔═╡ af02d23e-2e93-11eb-3547-85d2aa07081b
 let
-	Ns = 1:5:150
+	# TODO: Not sure if O(N^2) ... it's a very wide parabola if so
+	Ns = 1:10:200
 	plot(Ns, runtime.(Ns))
 end
 
@@ -989,14 +986,14 @@ radiation_sim = let
 	grid = Grid(10, 6.e6)
 	# you can specify non-default parameters like so:
 	# params = RadiationOceanModelParameters(S_mean=1500, A=210, κ=2e4)
-	params = RadiationOceanModelParameters(S_mean=10, A=5000, κ=2e4)
-	# params = RadiationOceanModelParameters()
+	# params = RadiationOceanModelParameters(S_mean=10, A=5000, κ=2e4)
+	params = RadiationOceanModelParameters()
 	
 	u, v = DoubleGyre(grid)
 	
-	# T_init_value = 10
-	# T_init = constantT(grid; value=T_init_value)
-	T_init = copy(ocean_T_init)
+	T_init_value = 10
+	T_init = constantT(grid; value=T_init_value)
+	# T_init = copy(ocean_T_init)
 	
 	model = RadiationOceanModel(grid, params, u, v)
 	Δt = 40*60*60
@@ -1393,7 +1390,7 @@ todo(text) = HTML("""<div
 # ╟─3dffa000-2db7-11eb-263b-57fa833d5785
 # ╠═b952d290-2db7-11eb-3fa9-2bc8d77b9fd6
 # ╟─88c56350-2c08-11eb-14e9-77e71d749e6d
-# ╟─014495d6-2cda-11eb-05d7-91e5a467647e
+# ╠═014495d6-2cda-11eb-05d7-91e5a467647e
 # ╟─d6a56496-2cda-11eb-3d54-d7141a49a446
 # ╠═126bffce-2d0b-11eb-2bfd-bb5d1ad1169b
 # ╟─171c6880-2d0b-11eb-0180-454f2876cf51
